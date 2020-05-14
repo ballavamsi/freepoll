@@ -22,5 +22,46 @@ namespace freepoll.Controllers
         {
             return _dBContext.Status.ToList();
         }
+
+        [HttpGet]
+        [Route("{id}")]
+        public Status GetStatusById(int id)
+        {
+            return _dBContext.Status.FirstOrDefault(x => x.Statusisd == id);
+        }
+
+        [HttpPut]
+        public Status PutStatus(Status status)
+        {
+            _dBContext.Status.Add(status);
+            _dBContext.SaveChanges();
+            return status;
+        }
+        
+        [HttpPost]
+        public Status UpdateStatus(Status status)
+        {
+            _dBContext.Status.Update(status);
+            _dBContext.SaveChanges();
+            return status;
+        }
+
+        [HttpDelete]
+        [Route("{id}")]
+        public IActionResult DeleteStatus(int id)
+        {
+            try
+            {
+                Status s = _dBContext.Status.Where(x => x.Statusisd == id).FirstOrDefault();
+                _dBContext.Remove(s);
+                _dBContext.SaveChanges();
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                return  Ok(ex.Message);
+            }
+            
+        }
     }
 }

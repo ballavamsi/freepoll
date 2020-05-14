@@ -17,24 +17,12 @@ namespace freepoll.Models
 
         public virtual DbSet<Status> Status { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseMySQL("server=remotemysql.com;port=3306;user=3wAtUqE7dU;password=esHlHotlf9;database=3wAtUqE7dU");
-            }
-        }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Status>(entity =>
             {
-                entity.HasKey(e => e.Statusisd)
-                    .HasName("PRIMARY");
-
-                entity.Property(e => e.Statusisd)
-                    .HasColumnName("statusisd")
+                entity.Property(e => e.Statusid)
+                    .HasColumnName("statusid")
                     .HasColumnType("bigint(20) unsigned");
 
                 entity.Property(e => e.Statusname)

@@ -27,7 +27,7 @@ namespace freepoll.Controllers
         [Route("{id}")]
         public Status GetStatusById(int id)
         {
-            return _dBContext.Status.FirstOrDefault(x => x.Statusisd == id);
+            return _dBContext.Status.FirstOrDefault(x => x.Statusid == id);
         }
 
         [HttpPut]
@@ -37,7 +37,7 @@ namespace freepoll.Controllers
             _dBContext.SaveChanges();
             return status;
         }
-        
+
         [HttpPost]
         public Status UpdateStatus(Status status)
         {
@@ -52,16 +52,16 @@ namespace freepoll.Controllers
         {
             try
             {
-                Status s = _dBContext.Status.Where(x => x.Statusisd == id).FirstOrDefault();
+                Status s = _dBContext.Status.Where(x => x.Statusid == id).FirstOrDefault();
                 _dBContext.Remove(s);
                 _dBContext.SaveChanges();
                 return Ok(true);
             }
             catch (Exception ex)
             {
-                return  Ok(ex.Message);
+                return Ok(ex.Message);
             }
-            
+
         }
     }
 }

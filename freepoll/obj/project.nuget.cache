@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "kleVk+M3JP5ZCn6rNL/gFWfBA2Ai2RUfYfMmGxwQo/WNt7FFuV8h1RweUruD7AfV2GZrx5Y1NnJ0SAZyC3oK5Q==",
+  "dgSpecHash": "7nFxrhKQ45v2QzbuggqbHQNPY9mBbEYBBrqNIYgTeIQUsTx4/rjf9jKZ3gQi8fmzD8cbKeSmfcPJikCkdCN/Lw==",
   "success": true,
-  "projectFilePath": "D:\\MyProjects\\freepoll\\freepoll\\freepoll.csproj",
+  "projectFilePath": "D:\\MyProjects\\freepoll\\freepoll\\freepoll\\freepoll.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\vamsi.balla\\.nuget\\packages\\bouncycastle.netcore\\1.8.3\\bouncycastle.netcore.1.8.3.nupkg.sha512",
     "C:\\Users\\vamsi.balla\\.nuget\\packages\\google.protobuf\\3.6.1\\google.protobuf.3.6.1.nupkg.sha512",

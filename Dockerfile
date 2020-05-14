@@ -18,5 +18,4 @@ RUN dotnet publish "freepoll.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-WORKDIR /publish
-ENTRYPOINT ["ASPNETCORE_URLS=http://*:$port", "dotnet", "freepoll.dll"]
+CMD ASPNETCORE_URLS=http://*:$PORT dotnet freepoll.dll

@@ -8166,11 +8166,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\MyProjects\\freepoll\\freepoll\\freepoll.csproj",
+      "projectUniqueName": "D:\\MyProjects\\freepoll\\freepoll\\freepoll\\freepoll.csproj",
       "projectName": "freepoll",
-      "projectPath": "D:\\MyProjects\\freepoll\\freepoll\\freepoll.csproj",
+      "projectPath": "D:\\MyProjects\\freepoll\\freepoll\\freepoll\\freepoll.csproj",
       "packagesPath": "C:\\Users\\vamsi.balla\\.nuget\\packages\\",
-      "outputPath": "D:\\MyProjects\\freepoll\\freepoll\\obj\\",
+      "outputPath": "D:\\MyProjects\\freepoll\\freepoll\\freepoll\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

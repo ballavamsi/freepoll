@@ -65,7 +65,7 @@ namespace freepoll
             });
 
             //app.UseHttpsRedirection();
-
+            app.UseCors("AllowOrigin");
             app.UseRouting();
 
             app.UseAuthorization();

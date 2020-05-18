@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using freepoll.UserModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace freepoll.Helpers
@@ -69,6 +73,34 @@ namespace freepoll.Helpers
         private static bool IsNullOrWhitespace(this string s)
         {
             return String.IsNullOrWhiteSpace(s);
+        }
+
+        public static string GetUserCountryByIp(string ip)
+        {
+            IpInfo ipInfo = new IpInfo();
+            try
+            {
+                string info = new WebClient().DownloadString("http://ipinfo.io/" + ip);
+                ipInfo = JsonConvert.DeserializeObject<IpInfo>(info);
+                RegionInfo myRI1 = new RegionInfo(ipInfo.Country);
+                ipInfo.Country = myRI1.EnglishName;
+            }
+            catch (Exception)
+            {
+                ipInfo.Country = null;
+            }
+
+            return ipInfo.Country;
+        }
+
+        public static IPLocation GetIpAndLocation(IHttpContextAccessor _httpContextAccessor)
+        {
+            string ip = GetRequestIP(_httpContextAccessor);
+            return new IPLocation()
+            {
+                IP = ip,
+                Region = GetUserCountryByIp(ip)
+            };
         }
     }
 }

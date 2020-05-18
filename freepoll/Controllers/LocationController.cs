@@ -1,4 +1,5 @@
 using freepoll.Helpers;
+using freepoll.UserModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,9 +17,9 @@ namespace freepoll.Controllers
 
         [Route("ip")]
         [HttpGet]
-        public string GetUserIPAddress()
+        public IPLocation GetUserIPAddress()
         {
-            return LocationHelper.GetRequestIP(_httpContextAccessor);
+            return LocationHelper.GetIpAndLocation(_httpContextAccessor);
         }
 
     }

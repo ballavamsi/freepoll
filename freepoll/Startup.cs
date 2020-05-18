@@ -47,7 +47,7 @@ namespace freepoll
                 c.IncludeXmlComments(xmlPath);
             });
             services.AddDbContext<FreePollDBContext>(options => options.UseMySQL(Environment.GetEnvironmentVariable("FREEPOLLMYSQL")));
-            services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

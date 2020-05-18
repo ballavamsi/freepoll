@@ -19,6 +19,8 @@ using Microsoft.OpenApi.Models;
 using MySql.Data.EntityFrameworkCore.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using freepoll.Controllers;
 
 namespace freepoll
 {

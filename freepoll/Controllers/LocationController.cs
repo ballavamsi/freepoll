@@ -15,7 +15,6 @@ namespace freepoll.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
 
-        [Route("ip")]
         [HttpGet]
         public IPLocation GetUserIPAddress()
         {

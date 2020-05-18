@@ -13,6 +13,7 @@ namespace freepoll.Controllers
         }
 
         [Route("ip")]
+        [HttpGet]
         public string GetUserIPAddress(){
             return _accessor.ActionContext.HttpContext.Connection.RemoteIpAddress.ToString();
         }

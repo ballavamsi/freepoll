@@ -5,7 +5,7 @@ namespace freepoll.Models
 {
     public partial class Status
     {
-        public long Statusid { get; set; }
+        public int Statusid { get; set; }
         public string Statusname { get; set; }
     }
 }

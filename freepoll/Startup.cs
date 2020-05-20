@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using freepoll.Controllers;
+using AutoMapper;
 
 namespace freepoll
 {
@@ -50,6 +51,7 @@ namespace freepoll
             });
             services.AddDbContext<FreePollDBContext>(options => options.UseMySQL(Environment.GetEnvironmentVariable("FREEPOLLMYSQL")));
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddAutoMapper(typeof(Startup));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

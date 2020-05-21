@@ -73,6 +73,20 @@ namespace freepoll.Controllers
             return pollView;
         }
 
+        [Route("guid/{guid}")]
+        [HttpGet]
+        public PollViewModel GetPollByGuid(string guid)
+        {
+            Poll poll = _dBContext.Poll.Where(x => x.PollGuid.Trim().Equals(guid.Trim())).FirstOrDefault();
+
+            if(poll == null)  return null;
+            PollViewModel pollView = _mapper.Map<PollViewModel>(poll);
+
+            List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == poll.PollId).ToList();
+            pollView.PollOptions = options;
+            return pollView;
+        }
+
 
         //Mapper.CreateMap<Employee, User>(); //Creates the map and all fields are copied if properties are same   
 

@@ -101,7 +101,7 @@ namespace freepoll.Controllers
             var poll = _dBContext.Poll.Where(x => x.PollId == newPoll.pollId).FirstOrDefault();
 
             if (poll == null) return BadRequest("PollNotFound");
-            if (poll.Enddate <= DateTime.Now) return BadRequest("PollEnded");
+            if (poll.Enddate <= DateTime.Now.Date.AddDays(1).AddSeconds(-1)) return BadRequest("PollEnded");
 
             IPLocation userLocationDetails = LocationHelper.GetIpAndLocation(_httpContextAccessor);
 

@@ -6,18 +6,24 @@ using System;
 using freepoll.Helpers;
 using System.Collections.Generic;
 using AutoMapper;
+using freepoll.UserModels;
+using Microsoft.AspNetCore.Http;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Dynamic;
 
 namespace freepoll.Controllers
 {
     [Route("api/poll")]
-    public class PollController
+    public class PollController : ControllerBase
     {
         private readonly FreePollDBContext _dBContext;
         private readonly IMapper _mapper;
-        public PollController(FreePollDBContext dBContext, IMapper mapper)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public PollController(FreePollDBContext dBContext, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _dBContext = dBContext;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [Route("add")]
@@ -75,18 +81,85 @@ namespace freepoll.Controllers
 
         [Route("guid/{guid}")]
         [HttpGet]
-        public PollViewModel GetPollByGuid(string guid)
+        public IActionResult GetPollByGuid(string guid)
         {
             Poll poll = _dBContext.Poll.Where(x => x.PollGuid.Trim().Equals(guid.Trim())).FirstOrDefault();
 
-            if(poll == null)  return null;
+            if(poll == null)  return NotFound("PollNotFound");
             PollViewModel pollView = _mapper.Map<PollViewModel>(poll);
 
             List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == poll.PollId).ToList();
             pollView.PollOptions = options;
-            return pollView;
+            return Ok(pollView);
         }
 
+
+        [Route("vote")]
+        [HttpPut]
+        public IActionResult VotePoll([FromBody]PollVoteRequestViewModel newPoll)
+        {
+            var poll = _dBContext.Poll.Where(x => x.PollId == newPoll.pollId).FirstOrDefault();
+
+            if (poll == null) return BadRequest("PollNotFound");
+            if (poll.Enddate <= DateTime.Now) return BadRequest("PollEnded");
+
+            IPLocation userLocationDetails = LocationHelper.GetIpAndLocation(_httpContextAccessor);
+
+            if(poll.Duplicate == 0)
+            {
+                var voted = _dBContext.PollVotes.Where(x => x.IpAddress == userLocationDetails.IP && x.UserLocation == userLocationDetails.Region).Any();
+                if (voted) return BadRequest("PollVoted");
+            }
+
+            List<PollVotes> lstPollVotes = new List<PollVotes>();
+            foreach (var item in newPoll.options)
+            {
+                PollVotes pollVote = new PollVotes();
+                pollVote.PollId = poll.PollId;
+                pollVote.OptionId = Int32.Parse(item);
+                pollVote.IpAddress = userLocationDetails.IP;
+                pollVote.UserLocation = userLocationDetails.Region;
+                pollVote.CreatedDate = DateTime.UtcNow;
+                lstPollVotes.Add(pollVote);
+            }
+            _dBContext.PollVotes.AddRange(lstPollVotes);
+            _dBContext.SaveChanges();
+            return Ok(true);
+        }
+
+        [Route("result/{pollGuid}")]
+        [HttpGet]
+        public IActionResult GetResults(string pollGuid)
+        {
+            var poll = _dBContext.Poll.Where(x => x.PollGuid == pollGuid).FirstOrDefault();
+            if (poll == null) return BadRequest("PollNotFound");
+
+            List<PollVotes> votes = _dBContext.PollVotes.Where(x => x.PollId == poll.PollId).ToList();
+            List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == poll.PollId).ToList();
+
+
+            List<PollVoteOptionResponseViewModel> lstResponse = new List<PollVoteOptionResponseViewModel>();
+            foreach (var item in options)
+            {
+                var _count = votes.Where(x => x.OptionId == item.PollOptionId).Count();
+                lstResponse.Add(new PollVoteOptionResponseViewModel() { label = item.OptionText, count = _count });
+            }
+
+            List<PollVoteOptionResponseViewModel> lstRegion = new List<PollVoteOptionResponseViewModel>();
+            foreach (var item in votes.GroupBy(x => x.UserLocation).ToList())
+            {
+                lstRegion.Add(new PollVoteOptionResponseViewModel() { label = string.IsNullOrEmpty(item.Key) ? "Unknown" : item.Key, count = item.Count() });
+            }
+
+            PollVoteResponseViewModel dynamicData = new PollVoteResponseViewModel()
+            {
+                Question = poll.Name,
+                Options = lstResponse,
+                Regions = lstRegion
+            };
+
+            return Ok(dynamicData);
+        }
 
         //Mapper.CreateMap<Employee, User>(); //Creates the map and all fields are copied if properties are same   
 

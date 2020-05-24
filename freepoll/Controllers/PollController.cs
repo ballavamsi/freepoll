@@ -86,6 +86,8 @@ namespace freepoll.Controllers
             Poll poll = _dBContext.Poll.Where(x => x.PollGuid.Trim().Equals(guid.Trim())).FirstOrDefault();
 
             if(poll == null)  return NotFound("PollNotFound");
+            if (poll.Enddate <= DateTime.Now.Date.AddDays(1).AddSeconds(-1)) return BadRequest("PollEnded");
+
             PollViewModel pollView = _mapper.Map<PollViewModel>(poll);
 
             List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == poll.PollId).ToList();

@@ -14,6 +14,7 @@ namespace freepoll.ViewModels
         public DateTime? Enddate { get; set; }
         public int Emailidrequired { get; set; }
 
+        public string SurveyGuid { get; set; }
         public List<SurveyQuestionsViewModel> SurveyQuestions { get; set; }
     }
 }

@@ -123,5 +123,44 @@ namespace freepoll.Controllers
 
             return surview;
         }
+
+        [Route("guid/{guid}")]
+        [HttpGet]
+        public SurveyViewModel GetSurveyBasedonGuid(string guid)
+        {
+            SurveyViewModel surv = new SurveyViewModel();
+            Survey sur = _dBContext.Survey.Where(x => x.SurveyGuid == guid).FirstOrDefault();
+
+            if (sur.SurveyGuid != null)
+            {
+                surv.Welcometitle = sur.Welcometitle;
+                surv.Endtitle = sur.Endtitle;
+                surv.Welcomeimage = sur.Welcomeimage;
+                surv.SurveyGuid = sur.SurveyGuid;
+
+                List<SurveyQuestions> questions = _dBContext.SurveyQuestions.Where(x => x.SurveyId == sur.Surveyid).ToList();
+
+                List<SurveyQuestionsViewModel> viewquestions = new List<SurveyQuestionsViewModel>();
+
+                foreach (var item in questions)
+                {
+                    SurveyQuestionsViewModel viewquestion = new SurveyQuestionsViewModel();
+                    viewquestion.Title = item.Title;
+                    viewquestion.Subtitle = item.Subtitle;
+                    List<SurveyQuestionOptions> options = new List<SurveyQuestionOptions>();
+                    options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).ToList();
+                    Dictionary<string, string> dict = new Dictionary<string, string>();
+                    foreach (var opt in options)
+                    {
+                        dict.Add(opt.OptionKey, opt.OptionValue);
+                    }
+                    viewquestion.Options = dict;
+                    viewquestions.Add(viewquestion);
+                }
+                surv.SurveyQuestions = viewquestions;
+            }
+
+            return surv;
+        }
     }
 }

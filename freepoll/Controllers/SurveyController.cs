@@ -162,5 +162,49 @@ namespace freepoll.Controllers
 
             return surv;
         }
+
+        [Route("begin")]
+        [HttpPut]
+        public int BeginSurvey([FromBody] string emailid)
+        {
+            int userid = 0;
+
+            SurveyUser suser = new SurveyUser();
+
+            suser.SurveyUserEmail = emailid;
+
+            _dBContext.SurveyUser.Add(suser);
+            _dBContext.SaveChanges();
+
+            userid = suser.SurveyUserId;
+            TempData["SurveyUserId"] = userid;
+            return userid;
+        }
+
+        [Route("Next")]
+        [HttpPut]
+        public int NextPageofSurvey([FromBody] SurveyQuestionsViewModel questions)
+        {
+            int userid = 0;
+
+            userid = Convert.ToInt32(TempData["SurveyUserId"]);
+
+            SurveyUserQuestionValues userquestions = new SurveyUserQuestionValues();
+            userquestions.SurveyUserId = userid;
+            userquestions.SurveyUserQuestionId = questions.SurveyQuestionId;
+            userquestions.SurveyUserTypeId = questions.TypeId;
+
+            _dBContext.SurveyUserQuestionValues.Add(userquestions);
+            _dBContext.SaveChanges();
+
+            SurveyUserQuestionOptions userquestionoptions = new SurveyUserQuestionOptions();
+            userquestionoptions.SurveyUserQuestionId = userquestions.SurveyUserQuestionId;
+
+            _dBContext.SurveyUserQuestionOptions.Add(userquestionoptions);
+            _dBContext.SaveChanges();
+
+            return userid;
+        }
+
     }
 }

@@ -75,7 +75,7 @@ namespace freepoll.Controllers
                     SurveyQuestionOptions qop = new SurveyQuestionOptions();
                     qop.SurveyQuestionId = qid;
                     qop.OptionKey = item.Key;
-                    qop.OptionValue = item.Value;
+                    qop.OptionValue = Convert.ToString(item.Value);
                     qop.CreatedBy = Resources.SystemUser;
                     qop.CreatedDate = DateTime.UtcNow;
                     qoplist.Add(qop);
@@ -111,7 +111,7 @@ namespace freepoll.Controllers
                 viewquestion.Subtitle = item.Subtitle;
                 List<SurveyQuestionOptions> options = new List<SurveyQuestionOptions>();
                 options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).ToList();
-                Dictionary<string, string> dict = new Dictionary<string, string>();
+                Dictionary<string, object> dict = new Dictionary<string, object>();
                 foreach (var opt in options)
                 {
                     dict.Add(opt.OptionKey, opt.OptionValue);
@@ -149,7 +149,7 @@ namespace freepoll.Controllers
                     viewquestion.Subtitle = item.Subtitle;
                     List<SurveyQuestionOptions> options = new List<SurveyQuestionOptions>();
                     options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).ToList();
-                    Dictionary<string, string> dict = new Dictionary<string, string>();
+                    Dictionary<string, object> dict = new Dictionary<string, object>();
                     foreach (var opt in options)
                     {
                         dict.Add(opt.OptionKey, opt.OptionValue);

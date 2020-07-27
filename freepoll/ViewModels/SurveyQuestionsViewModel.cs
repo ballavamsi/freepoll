@@ -20,7 +20,7 @@ namespace freepoll.ViewModels
         public DateTime? UpdatedDate { get; set; }
         public string UpdatedBy { get; set; }
 
-        public Dictionary<string,string> Options { get; set; }
+        public Dictionary<string, object> Options { get; set; }
 
     }
 }

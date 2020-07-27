@@ -7,6 +7,7 @@ namespace freepoll.ViewModels
 {
     public class SurveyViewModel
     {
+        public int SurveyId { get; set; }
         public string Welcometitle { get; set; }
         public string Endtitle { get; set; }
         public string Welcomeimage { get; set; }

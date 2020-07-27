@@ -33,6 +33,7 @@ namespace freepoll.Controllers
             int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
             Survey s = new Survey();
             s.Welcometitle = newSurvey.Welcometitle;
+            s.Welcomeimage = newSurvey.Welcomeimage;
             s.Endtitle = newSurvey.Endtitle;
             s.StatusId = PublishedStatusId;
             s.CreatedBy = Resources.SystemUser;
@@ -70,17 +71,20 @@ namespace freepoll.Controllers
                 int qid = qlist[i].SurveyQuestionId;
                 var options = newSurvey.SurveyQuestions[i].Options;
                 List<SurveyQuestionOptions> qoplist = new List<SurveyQuestionOptions>();
-                foreach (var item in options)
+                if (options != null)
                 {
-                    SurveyQuestionOptions qop = new SurveyQuestionOptions();
-                    qop.SurveyQuestionId = qid;
-                    qop.OptionKey = item.Key;
-                    qop.OptionValue = Convert.ToString(item.Value);
-                    qop.CreatedBy = Resources.SystemUser;
-                    qop.CreatedDate = DateTime.UtcNow;
-                    qoplist.Add(qop);
+                    foreach (var item in options)
+                    {
+                        SurveyQuestionOptions qop = new SurveyQuestionOptions();
+                        qop.SurveyQuestionId = qid;
+                        qop.OptionKey = item.Key;
+                        qop.OptionValue = Convert.ToString(item.Value);
+                        qop.CreatedBy = Resources.SystemUser;
+                        qop.CreatedDate = DateTime.UtcNow;
+                        qoplist.Add(qop);
+                    }
+                    _dBContext.SurveyQuestionOptions.AddRange(qoplist);
                 }
-                _dBContext.SurveyQuestionOptions.AddRange(qoplist);
                 _dBContext.SaveChanges();
             }
 
@@ -94,7 +98,7 @@ namespace freepoll.Controllers
             SurveyViewModel surview = new SurveyViewModel();
 
             Survey sur = _dBContext.Survey.Where(x => x.Surveyid == id).FirstOrDefault();
-
+            surview.SurveyId = sur.Surveyid;
             surview.Welcometitle = sur.Welcometitle;
             surview.Endtitle = sur.Endtitle;
             surview.Welcomeimage = sur.Welcomeimage;
@@ -135,6 +139,7 @@ namespace freepoll.Controllers
             {
                 surv.Welcometitle = sur.Welcometitle;
                 surv.Endtitle = sur.Endtitle;
+                surv.SurveyId = sur.Surveyid;
                 surv.Welcomeimage = sur.Welcomeimage;
                 surv.SurveyGuid = sur.SurveyGuid;
 

@@ -24,6 +24,9 @@ namespace freepoll.Models
         public virtual DbSet<Survey> Survey { get; set; }
         public virtual DbSet<SurveyQuestionOptions> SurveyQuestionOptions { get; set; }
         public virtual DbSet<SurveyQuestions> SurveyQuestions { get; set; }
+        public virtual DbSet<SurveyUser> SurveyUser { get; set; }
+        public virtual DbSet<SurveyUserQuestionOptions> SurveyUserQuestionOptions { get; set; }
+        public virtual DbSet<SurveyUserQuestionValues> SurveyUserQuestionValues { get; set; }
         public virtual DbSet<TypeControls> TypeControls { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -258,6 +261,11 @@ namespace freepoll.Models
 
                 entity.Property(e => e.UpdatedDate).HasColumnName("updated_date");
 
+                entity.Property(e => e.Welcomedescription)
+                    .HasColumnName("welcomedescription")
+                    .HasMaxLength(1000)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.Welcomeimage)
                     .HasColumnName("welcomeimage")
                     .HasMaxLength(100)
@@ -360,6 +368,67 @@ namespace freepoll.Models
                     .HasColumnType("int(11)");
 
                 entity.Property(e => e.UpdatedDate).HasColumnName("updated_date");
+            });
+
+            modelBuilder.Entity<SurveyUser>(entity =>
+            {
+                entity.ToTable("Survey_User");
+
+                entity.Property(e => e.SurveyUserId)
+                    .HasColumnName("survey_user_id")
+                    .HasColumnType("int(10)");
+
+                entity.Property(e => e.SurveyUserEmail)
+                    .IsRequired()
+                    .HasColumnName("survey_user_email")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<SurveyUserQuestionOptions>(entity =>
+            {
+                entity.ToTable("Survey_User_Question_Options");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("int(10)");
+
+                entity.Property(e => e.SurveyUserQuestionId)
+                    .HasColumnName("survey_user_question_id")
+                    .HasColumnType("int(10)");
+
+                entity.Property(e => e.SurveyUserQuestionOptionid)
+                    .HasColumnName("survey_user_question_optionid")
+                    .HasColumnType("int(10)");
+
+                entity.Property(e => e.SurveyUserQuestionOptionvalueq)
+                    .HasColumnName("survey_user_question_optionvalueq")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<SurveyUserQuestionValues>(entity =>
+            {
+                entity.HasKey(e => e.SurveyUserQuestionValueId)
+                    .HasName("PRIMARY");
+
+                entity.ToTable("Survey_User_Question_Values");
+
+                entity.Property(e => e.SurveyUserQuestionValueId)
+                    .HasColumnName("survey_user_question_value_id")
+                    .HasColumnType("int(10)");
+
+                entity.Property(e => e.SurveyUserId)
+                    .HasColumnName("survey_user_id")
+                    .HasColumnType("int(10)");
+
+                entity.Property(e => e.SurveyUserQuestionId)
+                    .HasColumnName("survey_user_question_id")
+                    .HasColumnType("int(10)");
+
+                entity.Property(e => e.SurveyUserTypeId)
+                    .HasColumnName("survey_user_type_id")
+                    .HasColumnType("int(10)");
             });
 
             modelBuilder.Entity<TypeControls>(entity =>

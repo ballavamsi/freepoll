@@ -33,6 +33,7 @@ namespace freepoll.Controllers
             int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
             Survey s = new Survey();
             s.Welcometitle = newSurvey.Welcometitle;
+            s.Welcomedescription = newSurvey.WelcomeDescription;
             s.Welcomeimage = newSurvey.Welcomeimage;
             s.Endtitle = newSurvey.Endtitle;
             s.StatusId = PublishedStatusId;
@@ -100,6 +101,7 @@ namespace freepoll.Controllers
             Survey sur = _dBContext.Survey.Where(x => x.Surveyid == id).FirstOrDefault();
             surview.SurveyId = sur.Surveyid;
             surview.Welcometitle = sur.Welcometitle;
+            surview.WelcomeDescription = sur.Welcomedescription;
             surview.Endtitle = sur.Endtitle;
             surview.Welcomeimage = sur.Welcomeimage;
             surview.SurveyGuid = sur.SurveyGuid;
@@ -138,6 +140,7 @@ namespace freepoll.Controllers
             if (sur.SurveyGuid != null)
             {
                 surv.Welcometitle = sur.Welcometitle;
+                surv.WelcomeDescription = sur.Welcomedescription;
                 surv.Endtitle = sur.Endtitle;
                 surv.SurveyId = sur.Surveyid;
                 surv.Welcomeimage = sur.Welcomeimage;

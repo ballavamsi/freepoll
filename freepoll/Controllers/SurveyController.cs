@@ -28,7 +28,7 @@ namespace freepoll.Controllers
 
         [Route("add")]
         [HttpPut]
-        public SurveyViewModel AddNewSurvey([FromBody] SurveyViewModel newSurvey)
+        public IActionResult AddNewSurvey([FromBody] SurveyViewModel newSurvey)
         {
             int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
             Survey s = new Survey();
@@ -54,7 +54,7 @@ namespace freepoll.Controllers
                 question.SurveyId = s.Surveyid;
                 question.Title = item.Title;
                 question.CreatedBy = Resources.SystemUser;
-                question.CreatedDate = DateTime.UtcNow; 
+                question.CreatedDate = DateTime.UtcNow;
                 question.QuestionDisplayOrder = qcount;
                 question.TypeId = item.TypeId;
                 question.Isrequired = item.Isrequired;
@@ -66,8 +66,8 @@ namespace freepoll.Controllers
             _dBContext.SurveyQuestions.AddRange(qlist);
             _dBContext.SaveChanges();
 
-           
-            for (int i=0;i<qlist.Count;i++)
+
+            for (int i = 0; i < qlist.Count; i++)
             {
                 int qid = qlist[i].SurveyQuestionId;
                 var options = newSurvey.SurveyQuestions[i].Options;
@@ -86,15 +86,16 @@ namespace freepoll.Controllers
                     }
                     _dBContext.SurveyQuestionOptions.AddRange(qoplist);
                 }
+
                 _dBContext.SaveChanges();
             }
 
-            return GetSurvey(s.Surveyid);
+            return Ok(GetSurvey(s.Surveyid));
         }
 
         [Route("{id}")]
         [HttpGet]
-        public SurveyViewModel GetSurvey(int id)
+        public IActionResult GetSurvey(int id)
         {
             SurveyViewModel surview = new SurveyViewModel();
 
@@ -102,6 +103,7 @@ namespace freepoll.Controllers
             surview.SurveyId = sur.Surveyid;
             surview.Welcometitle = sur.Welcometitle;
             surview.WelcomeDescription = sur.Welcomedescription;
+            surview.Emailidrequired = sur.Emailidrequired;
             surview.Endtitle = sur.Endtitle;
             surview.Welcomeimage = sur.Welcomeimage;
             surview.SurveyGuid = sur.SurveyGuid;
@@ -110,7 +112,7 @@ namespace freepoll.Controllers
 
             List<SurveyQuestionsViewModel> viewquestions = new List<SurveyQuestionsViewModel>();
 
-            foreach(var item in questions)
+            foreach (var item in questions)
             {
                 SurveyQuestionsViewModel viewquestion = new SurveyQuestionsViewModel();
                 viewquestion.Title = item.Title;
@@ -123,24 +125,28 @@ namespace freepoll.Controllers
                     dict.Add(opt.OptionKey, opt.OptionValue);
                 }
                 viewquestion.Options = dict;
+                viewquestion.ObjectOptions = options;
                 viewquestions.Add(viewquestion);
             }
             surview.SurveyQuestions = viewquestions;
 
-            return surview;
+            return Ok(surview);
         }
 
         [Route("guid/{guid}")]
         [HttpGet]
-        public SurveyViewModel GetSurveyBasedonGuid(string guid)
+        public IActionResult GetSurveyBasedonGuid(string guid)
         {
             SurveyViewModel surv = new SurveyViewModel();
             Survey sur = _dBContext.Survey.Where(x => x.SurveyGuid == guid).FirstOrDefault();
+            if (sur == null)
+                return BadRequest("SurveyNotFound");
 
             if (sur.SurveyGuid != null)
             {
                 surv.Welcometitle = sur.Welcometitle;
                 surv.WelcomeDescription = sur.Welcomedescription;
+                surv.Emailidrequired = sur.Emailidrequired;
                 surv.Endtitle = sur.Endtitle;
                 surv.SurveyId = sur.Surveyid;
                 surv.Welcomeimage = sur.Welcomeimage;
@@ -153,6 +159,8 @@ namespace freepoll.Controllers
                 foreach (var item in questions)
                 {
                     SurveyQuestionsViewModel viewquestion = new SurveyQuestionsViewModel();
+                    viewquestion.SurveyQuestionId = item.SurveyQuestionId;
+                    viewquestion.QuestionDisplayOrder = item.QuestionDisplayOrder;
                     viewquestion.Title = item.Title;
                     viewquestion.Subtitle = item.Subtitle;
                     List<SurveyQuestionOptions> options = new List<SurveyQuestionOptions>();
@@ -163,12 +171,66 @@ namespace freepoll.Controllers
                         dict.Add(opt.OptionKey, opt.OptionValue);
                     }
                     viewquestion.Options = dict;
+                    viewquestion.ObjectOptions = options;
                     viewquestions.Add(viewquestion);
                 }
                 surv.SurveyQuestions = viewquestions;
             }
 
-            return surv;
+            return Ok(surv);
         }
+
+        [Route("begin/{guid}/{emailId}")]
+        [HttpPost]
+        public IActionResult BeginSurvey(string guid, string emailId)
+        {
+            Survey sur = _dBContext.Survey.Where(x => x.SurveyGuid == guid).FirstOrDefault();
+            emailId = Convert.ToString(emailId).ToLower();
+            if (sur == null)
+                return BadRequest("SurveyNotFound");
+
+            if (sur.Enddate < DateTime.UtcNow)
+                return BadRequest("SurveyEnded");
+
+            bool checkSurveyEmail = _dBContext.SurveyUser.Any(x => x.SurveyId == sur.Surveyid && x.SurveyUserEmail.ToLower().Equals(emailId));
+            if (checkSurveyEmail && Convert.ToBoolean(sur.Emailidrequired))
+                return BadRequest("SurveyAlreadyTaken");
+
+            SurveyUser surveyUser = new SurveyUser();
+            surveyUser.SurveyId = sur.Surveyid;
+            surveyUser.SurveyUserEmail = emailId;
+            surveyUser.SurveyUserGuid = Guid.NewGuid().ToString();
+            surveyUser.InsertedDatetime = DateTime.UtcNow;
+
+            _dBContext.SurveyUser.Add(surveyUser);
+            _dBContext.SaveChanges();
+            return Ok(surveyUser);
+        }
+
+        //[Route("begin/{guid}/{questionNo}")]
+        //[HttpPost]
+        //public IActionResult GetSurveyQuestion(string guid, int questionNo)
+        //{
+        //    Survey sur = _dBContext.Survey.Where(x => x.SurveyGuid == guid).FirstOrDefault();
+        //    if (sur == null)
+        //        return BadRequest("SurveyNotFound");
+
+        //    if (sur.Enddate < DateTime.UtcNow)
+        //        return BadRequest("SurveyEnded");
+
+        //    bool checkSurveyEmail = _dBContext.SurveyQuestions.Where(x => x.sur)
+        //    if (checkSurveyEmail && Convert.ToBoolean(sur.Emailidrequired))
+        //        return BadRequest("SurveyAlreadyTaken");
+
+        //    SurveyUser surveyUser = new SurveyUser();
+        //    surveyUser.SurveyId = sur.Surveyid;
+        //    surveyUser.SurveyUserEmail = emailId;
+        //    surveyUser.SurveyUserGuid = Guid.NewGuid().ToString();
+        //    surveyUser.InsertedDatetime = DateTime.UtcNow;
+
+        //    _dBContext.SurveyUser.Add(surveyUser);
+        //    _dBContext.SaveChanges();
+        //    return Ok(surveyUser);
+        //}
     }
 }

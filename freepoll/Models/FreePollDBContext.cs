@@ -26,7 +26,6 @@ namespace freepoll.Models
         public virtual DbSet<SurveyQuestions> SurveyQuestions { get; set; }
         public virtual DbSet<SurveyUser> SurveyUser { get; set; }
         public virtual DbSet<SurveyUserQuestionOptions> SurveyUserQuestionOptions { get; set; }
-        public virtual DbSet<SurveyUserQuestionValues> SurveyUserQuestionValues { get; set; }
         public virtual DbSet<TypeControls> TypeControls { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -295,6 +294,10 @@ namespace freepoll.Models
 
                 entity.Property(e => e.CreatedDate).HasColumnName("created_date");
 
+                entity.Property(e => e.DisplayOrder)
+                    .HasColumnName("display_order")
+                    .HasColumnType("int(11)");
+
                 entity.Property(e => e.OptionKey)
                     .HasColumnName("option_key")
                     .HasMaxLength(100)
@@ -378,10 +381,25 @@ namespace freepoll.Models
                     .HasColumnName("survey_user_id")
                     .HasColumnType("int(10)");
 
+                entity.Property(e => e.CompletedDatetime).HasColumnName("completed_datetime");
+
+                entity.Property(e => e.InsertedDatetime)
+                    .HasColumnName("inserted_datetime")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.Property(e => e.SurveyId)
+                    .HasColumnName("survey_id")
+                    .HasColumnType("int(11)");
+
                 entity.Property(e => e.SurveyUserEmail)
                     .IsRequired()
                     .HasColumnName("survey_user_email")
                     .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.SurveyUserGuid)
+                    .HasColumnName("survey_user_guid")
+                    .HasMaxLength(1000)
                     .IsUnicode(false);
             });
 
@@ -393,41 +411,26 @@ namespace freepoll.Models
                     .HasColumnName("id")
                     .HasColumnType("int(10)");
 
-                entity.Property(e => e.SurveyUserQuestionId)
-                    .HasColumnName("survey_user_question_id")
+                entity.Property(e => e.CustomAnswer)
+                    .HasColumnName("custom_answer")
+                    .HasMaxLength(10000)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.InsertedDatetime)
+                    .HasColumnName("inserted_datetime")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.Property(e => e.SurveyQuestionId)
+                    .HasColumnName("survey_question_id")
                     .HasColumnType("int(10)");
 
-                entity.Property(e => e.SurveyUserQuestionOptionid)
-                    .HasColumnName("survey_user_question_optionid")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.SurveyUserQuestionOptionvalueq)
-                    .HasColumnName("survey_user_question_optionvalueq")
+                entity.Property(e => e.SurveyQuestionOptionId)
+                    .HasColumnName("survey_question_option_id")
                     .HasMaxLength(100)
                     .IsUnicode(false);
-            });
-
-            modelBuilder.Entity<SurveyUserQuestionValues>(entity =>
-            {
-                entity.HasKey(e => e.SurveyUserQuestionValueId)
-                    .HasName("PRIMARY");
-
-                entity.ToTable("Survey_User_Question_Values");
-
-                entity.Property(e => e.SurveyUserQuestionValueId)
-                    .HasColumnName("survey_user_question_value_id")
-                    .HasColumnType("int(10)");
 
                 entity.Property(e => e.SurveyUserId)
                     .HasColumnName("survey_user_id")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.SurveyUserQuestionId)
-                    .HasColumnName("survey_user_question_id")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.SurveyUserTypeId)
-                    .HasColumnName("survey_user_type_id")
                     .HasColumnType("int(10)");
             });
 

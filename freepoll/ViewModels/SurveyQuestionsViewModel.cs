@@ -1,4 +1,5 @@
-﻿using System;
+﻿using freepoll.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ namespace freepoll.ViewModels
         public DateTime? UpdatedDate { get; set; }
         public string UpdatedBy { get; set; }
 
+        public List<SurveyQuestionOptions> ObjectOptions { get; set; }
         public Dictionary<string, object> Options { get; set; }
 
     }

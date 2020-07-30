@@ -1,3 +1,5 @@
 *.cache
 */bin/*
 */obj/*
+.vs/freepoll/DesignTimeBuild/.dtbcache.v2
+.vs/freepoll/v16/.suo

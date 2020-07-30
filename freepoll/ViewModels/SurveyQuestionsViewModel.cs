@@ -6,8 +6,12 @@ using System.Threading.Tasks;
 
 namespace freepoll.ViewModels
 {
+    /// <summary>
+    /// Survey Questions View Model
+    /// </summary>
     public class SurveyQuestionsViewModel
     {
+
         public int SurveyQuestionId { get; set; }
         public int SurveyId { get; set; }
         public int TypeId { get; set; }

@@ -183,17 +183,24 @@ namespace freepoll.Models
 
             modelBuilder.Entity<QuestionType>(entity =>
             {
-                entity.HasNoKey();
+                entity.HasKey(e => e.TypeId)
+                    .HasName("PRIMARY");
 
                 entity.ToTable("Question_Type");
-
-                entity.Property(e => e.IsActive)
-                    .HasColumnName("is_active")
-                    .HasColumnType("int(1) unsigned zerofill");
 
                 entity.Property(e => e.TypeId)
                     .HasColumnName("type_id")
                     .HasColumnType("int(10)");
+
+                entity.Property(e => e.IsActive)
+                    .HasColumnName("is_active")
+                    .HasColumnType("int(1) unsigned zerofill")
+                    .HasDefaultValueSql("'1'");
+
+                entity.Property(e => e.TypeCode)
+                    .HasColumnName("type_code")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
 
                 entity.Property(e => e.TypeValue)
                     .HasColumnName("type_value")

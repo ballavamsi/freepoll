@@ -7,6 +7,7 @@ namespace freepoll.Models
     {
         public int Surveyid { get; set; }
         public string Welcometitle { get; set; }
+        public string Welcomedescription { get; set; }
         public string Endtitle { get; set; }
         public string Welcomeimage { get; set; }
         public int Allowduplicate { get; set; }

@@ -192,6 +192,11 @@ namespace freepoll.Models
                     .HasColumnName("type_id")
                     .HasColumnType("int(10)");
 
+                entity.Property(e => e.DisplayOrder)
+                    .HasColumnName("display_order")
+                    .HasColumnType("int(11)")
+                    .HasDefaultValueSql("'1'");
+
                 entity.Property(e => e.IsActive)
                     .HasColumnName("is_active")
                     .HasColumnType("int(1) unsigned zerofill")

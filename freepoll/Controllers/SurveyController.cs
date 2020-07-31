@@ -102,6 +102,10 @@ namespace freepoll.Controllers
             SurveyViewModel surview = new SurveyViewModel();
 
             Survey sur = _dBContext.Survey.Where(x => x.Surveyid == id).FirstOrDefault();
+
+            if (sur == null)
+                return BadRequest("SurveyNotFound");
+
             surview.SurveyId = sur.Surveyid;
             surview.Welcometitle = sur.Welcometitle;
             surview.WelcomeDescription = sur.Welcomedescription;
@@ -185,6 +189,15 @@ namespace freepoll.Controllers
             }
 
             return Ok(surv);
+        }
+
+
+
+        [Route("begin/{guid}/")]
+        [HttpPost]
+        public IActionResult BeginSurvey(string guid)
+        {
+            return BeginSurvey(guid, "");
         }
 
         [Route("begin/{guid}/{emailId}")]
@@ -289,7 +302,7 @@ namespace freepoll.Controllers
         [HttpGet]
         public IActionResult GetQuestionTypes()
         {
-            List<QuestionType> lstQuestionTypes = _dBContext.QuestionType.ToList();
+            List<QuestionType> lstQuestionTypes = _dBContext.QuestionType.Where(x => x.IsActive == 1).OrderBy(x => x.DisplayOrder).ToList();
             List<QuestionTypesViewModel> questionTypesViewModels = new List<QuestionTypesViewModel>();
             foreach (var item in lstQuestionTypes)
             {

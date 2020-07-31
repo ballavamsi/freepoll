@@ -92,7 +92,7 @@ namespace freepoll.Controllers
                 _dBContext.SaveChanges();
             }
 
-            return Ok(GetSurvey(s.Surveyid));
+            return GetSurvey(s.Surveyid);
         }
 
         [Route("{id}")]

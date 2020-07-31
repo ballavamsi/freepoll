@@ -127,7 +127,7 @@ namespace freepoll.Controllers
                 viewquestion.Title = item.Title;
                 viewquestion.Subtitle = item.Subtitle;
                 List<SurveyQuestionOptions> options = new List<SurveyQuestionOptions>();
-                options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).ToList();
+                options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).OrderBy(x=> x.OptionKey).ToList();
                 Dictionary<string, object> dict = new Dictionary<string, object>();
                 foreach (var opt in options)
                 {
@@ -175,7 +175,7 @@ namespace freepoll.Controllers
                     viewquestion.Title = item.Title;
                     viewquestion.Subtitle = item.Subtitle;
                     List<SurveyQuestionOptions> options = new List<SurveyQuestionOptions>();
-                    options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).ToList();
+                    options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).OrderBy(x => x.OptionKey).ToList();
                     Dictionary<string, object> dict = new Dictionary<string, object>();
                     foreach (var opt in options)
                     {

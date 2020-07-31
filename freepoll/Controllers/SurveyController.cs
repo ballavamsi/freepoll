@@ -213,7 +213,7 @@ namespace freepoll.Controllers
                 return BadRequest("SurveyEnded");
 
             bool checkSurveyEmail = _dBContext.SurveyUser.Any(x => x.SurveyId == sur.Surveyid && x.SurveyUserEmail.ToLower().Equals(emailId));
-            if (checkSurveyEmail && Convert.ToBoolean(sur.Emailidrequired))
+            if (checkSurveyEmail && Convert.ToBoolean(sur.Emailidrequired) && !string.IsNullOrEmpty(emailId))
                 return BadRequest("SurveyAlreadyTaken");
 
             SurveyUser surveyUser = new SurveyUser();

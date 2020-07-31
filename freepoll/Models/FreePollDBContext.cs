@@ -15,7 +15,6 @@ namespace freepoll.Models
         {
         }
 
-        public virtual DbSet<Controls> Controls { get; set; }
         public virtual DbSet<Poll> Poll { get; set; }
         public virtual DbSet<PollOptions> PollOptions { get; set; }
         public virtual DbSet<PollVotes> PollVotes { get; set; }
@@ -26,25 +25,9 @@ namespace freepoll.Models
         public virtual DbSet<SurveyQuestions> SurveyQuestions { get; set; }
         public virtual DbSet<SurveyUser> SurveyUser { get; set; }
         public virtual DbSet<SurveyUserQuestionOptions> SurveyUserQuestionOptions { get; set; }
-        public virtual DbSet<TypeControls> TypeControls { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Controls>(entity =>
-            {
-                entity.HasKey(e => e.ControlId)
-                    .HasName("PRIMARY");
-
-                entity.Property(e => e.ControlId)
-                    .HasColumnName("control_id")
-                    .HasColumnType("int(11)");
-
-                entity.Property(e => e.ControlText)
-                    .HasColumnName("control_text")
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-            });
-
             modelBuilder.Entity<Poll>(entity =>
             {
                 entity.HasComment("polling details");
@@ -317,7 +300,7 @@ namespace freepoll.Models
 
                 entity.Property(e => e.OptionValue)
                     .HasColumnName("option_value")
-                    .HasMaxLength(100)
+                    .HasMaxLength(8000)
                     .IsUnicode(false);
 
                 entity.Property(e => e.SurveyQuestionId)
@@ -443,34 +426,6 @@ namespace freepoll.Models
 
                 entity.Property(e => e.SurveyUserId)
                     .HasColumnName("survey_user_id")
-                    .HasColumnType("int(10)");
-            });
-
-            modelBuilder.Entity<TypeControls>(entity =>
-            {
-                entity.HasKey(e => e.TypeControlId)
-                    .HasName("PRIMARY");
-
-                entity.ToTable("Type_Controls");
-
-                entity.Property(e => e.TypeControlId)
-                    .HasColumnName("type_control_id")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.ControlId)
-                    .HasColumnName("control_id")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.DisplayOrder)
-                    .HasColumnName("display_order")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.IsActive)
-                    .HasColumnName("is_active")
-                    .HasColumnType("int(1)");
-
-                entity.Property(e => e.TypeId)
-                    .HasColumnName("type_id")
                     .HasColumnType("int(10)");
             });
 

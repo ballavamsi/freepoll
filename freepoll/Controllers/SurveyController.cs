@@ -9,6 +9,8 @@ using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using freepoll.Helpers;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Newtonsoft.Json.Linq;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace freepoll.Controllers
 {
@@ -28,11 +30,12 @@ namespace freepoll.Controllers
 
         [Route("add")]
         [HttpPut]
-        public SurveyViewModel AddNewSurvey([FromBody] SurveyViewModel newSurvey)
+        public IActionResult AddNewSurvey([FromBody] SurveyViewModel newSurvey)
         {
             int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
             Survey s = new Survey();
             s.Welcometitle = newSurvey.Welcometitle;
+            s.Welcomedescription = newSurvey.WelcomeDescription;
             s.Welcomeimage = newSurvey.Welcomeimage;
             s.Endtitle = newSurvey.Endtitle;
             s.StatusId = PublishedStatusId;
@@ -53,7 +56,7 @@ namespace freepoll.Controllers
                 question.SurveyId = s.Surveyid;
                 question.Title = item.Title;
                 question.CreatedBy = Resources.SystemUser;
-                question.CreatedDate = DateTime.UtcNow; 
+                question.CreatedDate = DateTime.UtcNow;
                 question.QuestionDisplayOrder = qcount;
                 question.TypeId = item.TypeId;
                 question.Isrequired = item.Isrequired;
@@ -65,8 +68,8 @@ namespace freepoll.Controllers
             _dBContext.SurveyQuestions.AddRange(qlist);
             _dBContext.SaveChanges();
 
-           
-            for (int i=0;i<qlist.Count;i++)
+
+            for (int i = 0; i < qlist.Count; i++)
             {
                 int qid = qlist[i].SurveyQuestionId;
                 var options = newSurvey.SurveyQuestions[i].Options;
@@ -85,6 +88,7 @@ namespace freepoll.Controllers
                     }
                     _dBContext.SurveyQuestionOptions.AddRange(qoplist);
                 }
+
                 _dBContext.SaveChanges();
             }
 
@@ -93,13 +97,19 @@ namespace freepoll.Controllers
 
         [Route("{id}")]
         [HttpGet]
-        public SurveyViewModel GetSurvey(int id)
+        public IActionResult GetSurvey(int id)
         {
             SurveyViewModel surview = new SurveyViewModel();
 
             Survey sur = _dBContext.Survey.Where(x => x.Surveyid == id).FirstOrDefault();
+
+            if (sur == null)
+                return BadRequest("SurveyNotFound");
+
             surview.SurveyId = sur.Surveyid;
             surview.Welcometitle = sur.Welcometitle;
+            surview.WelcomeDescription = sur.Welcomedescription;
+            surview.Emailidrequired = sur.Emailidrequired;
             surview.Endtitle = sur.Endtitle;
             surview.Welcomeimage = sur.Welcomeimage;
             surview.SurveyGuid = sur.SurveyGuid;
@@ -108,36 +118,44 @@ namespace freepoll.Controllers
 
             List<SurveyQuestionsViewModel> viewquestions = new List<SurveyQuestionsViewModel>();
 
-            foreach(var item in questions)
+            foreach (var item in questions)
             {
                 SurveyQuestionsViewModel viewquestion = new SurveyQuestionsViewModel();
+                viewquestion.SurveyQuestionId = item.SurveyQuestionId;
+                viewquestion.QuestionDisplayOrder = item.QuestionDisplayOrder;
+                viewquestion.TypeId = item.TypeId;
                 viewquestion.Title = item.Title;
                 viewquestion.Subtitle = item.Subtitle;
                 List<SurveyQuestionOptions> options = new List<SurveyQuestionOptions>();
-                options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).ToList();
+                options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).OrderBy(x=> x.OptionKey).ToList();
                 Dictionary<string, object> dict = new Dictionary<string, object>();
                 foreach (var opt in options)
                 {
                     dict.Add(opt.OptionKey, opt.OptionValue);
                 }
                 viewquestion.Options = dict;
+                viewquestion.ObjectOptions = options;
                 viewquestions.Add(viewquestion);
             }
             surview.SurveyQuestions = viewquestions;
 
-            return surview;
+            return Ok(surview);
         }
 
         [Route("guid/{guid}")]
         [HttpGet]
-        public SurveyViewModel GetSurveyBasedonGuid(string guid)
+        public IActionResult GetSurveyBasedonGuid(string guid)
         {
             SurveyViewModel surv = new SurveyViewModel();
             Survey sur = _dBContext.Survey.Where(x => x.SurveyGuid == guid).FirstOrDefault();
+            if (sur == null)
+                return BadRequest("SurveyNotFound");
 
             if (sur.SurveyGuid != null)
             {
                 surv.Welcometitle = sur.Welcometitle;
+                surv.WelcomeDescription = sur.Welcomedescription;
+                surv.Emailidrequired = sur.Emailidrequired;
                 surv.Endtitle = sur.Endtitle;
                 surv.SurveyId = sur.Surveyid;
                 surv.Welcomeimage = sur.Welcomeimage;
@@ -150,22 +168,152 @@ namespace freepoll.Controllers
                 foreach (var item in questions)
                 {
                     SurveyQuestionsViewModel viewquestion = new SurveyQuestionsViewModel();
+                    viewquestion.SurveyQuestionId = item.SurveyQuestionId;
+                    viewquestion.QuestionDisplayOrder = item.QuestionDisplayOrder;
+                    viewquestion.Isrequired = item.Isrequired;
+                    viewquestion.TypeId = item.TypeId;
                     viewquestion.Title = item.Title;
                     viewquestion.Subtitle = item.Subtitle;
                     List<SurveyQuestionOptions> options = new List<SurveyQuestionOptions>();
-                    options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).ToList();
+                    options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).OrderBy(x => x.OptionKey).ToList();
                     Dictionary<string, object> dict = new Dictionary<string, object>();
                     foreach (var opt in options)
                     {
                         dict.Add(opt.OptionKey, opt.OptionValue);
                     }
                     viewquestion.Options = dict;
+                    viewquestion.ObjectOptions = options;
                     viewquestions.Add(viewquestion);
                 }
                 surv.SurveyQuestions = viewquestions;
             }
 
-            return surv;
+            return Ok(surv);
+        }
+
+
+
+        [Route("begin/{guid}/")]
+        [HttpPost]
+        public IActionResult BeginSurvey(string guid)
+        {
+            return BeginSurvey(guid, "");
+        }
+
+        [Route("begin/{guid}/{emailId}")]
+        [HttpPost]
+        public IActionResult BeginSurvey(string guid, string emailId)
+        {
+            Survey sur = _dBContext.Survey.Where(x => x.SurveyGuid == guid).FirstOrDefault();
+            emailId = Convert.ToString(emailId).ToLower();
+            if (sur == null)
+                return BadRequest("SurveyNotFound");
+
+            if (sur.Enddate < DateTime.UtcNow)
+                return BadRequest("SurveyEnded");
+
+            bool checkSurveyEmail = _dBContext.SurveyUser.Any(x => x.SurveyId == sur.Surveyid && x.SurveyUserEmail.ToLower().Equals(emailId));
+            if (checkSurveyEmail && Convert.ToBoolean(sur.Emailidrequired) && !string.IsNullOrEmpty(emailId))
+                return BadRequest("SurveyAlreadyTaken");
+
+            SurveyUser surveyUser = new SurveyUser();
+            surveyUser.SurveyId = sur.Surveyid;
+            surveyUser.SurveyUserEmail = emailId;
+            surveyUser.SurveyUserGuid = Guid.NewGuid().ToString();
+            surveyUser.InsertedDatetime = DateTime.UtcNow;
+
+            _dBContext.SurveyUser.Add(surveyUser);
+            _dBContext.SaveChanges();
+            return Ok(surveyUser);
+        }
+
+
+        [Route("submit/{guid}/{session}")]
+        [HttpPost]
+        public IActionResult SubmitSurvey(string guid, string session,QuestionAnswersRequestViewModel data)
+        {
+            List<QuestionAnswersViewModel> jObject = data.data;
+            Survey sur = _dBContext.Survey.Where(x => x.SurveyGuid == guid).FirstOrDefault();
+            if (sur == null)
+                return BadRequest("SurveyNotFound");
+
+            if (sur.Enddate < DateTime.UtcNow)
+                return BadRequest("SurveyEnded");
+
+            var surveyUsers = _dBContext.SurveyUser.Where(x => x.SurveyId == sur.Surveyid && x.SurveyUserGuid.Equals(session)).FirstOrDefault();
+            if (surveyUsers == null)
+                return BadRequest("SurveyWasNotStartedByUser");
+            if (surveyUsers.CompletedDatetime != null)
+                return BadRequest("SurveyWasAlreadySubmitted");
+
+            List<SurveyQuestions> questions = _dBContext.SurveyQuestions.Where(x => x.SurveyId == sur.Surveyid).ToList();
+            List<QuestionType> lstQuestionTypes = _dBContext.QuestionType.ToList();
+            List<SurveyUserQuestionOptions> lstSurveyUserQuestionOptions = new List<SurveyUserQuestionOptions>();
+
+            for (int i = 0; i < questions.Count-1; i++)
+            {
+                SurveyUserQuestionOptions surveyUserQuestionOption = new SurveyUserQuestionOptions();
+                surveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
+                surveyUserQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
+                surveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
+
+                QuestionAnswersViewModel requestViewModel = jObject.Where(x=> x.key == questions[i].SurveyQuestionId.ToString()).FirstOrDefault();
+
+                var questionTypeCode = lstQuestionTypes.Where(x => x.TypeId == questions[i].TypeId).FirstOrDefault().TypeCode;
+                bool addToList = true;
+                switch (questionTypeCode)
+                {
+                    case "essay":
+                        surveyUserQuestionOption.CustomAnswer = requestViewModel.text;
+                        break;
+                    case "radiobuttons":
+                        surveyUserQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
+                        break;
+                    case "multiple":
+                        foreach (var item in requestViewModel.selected)
+                        {
+                            SurveyUserQuestionOptions tempSurveyUserQuestionOption = new SurveyUserQuestionOptions();
+                            tempSurveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
+                            tempSurveyUserQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
+                            tempSurveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
+                            tempSurveyUserQuestionOption.SurveyQuestionOptionId = item;
+                            lstSurveyUserQuestionOptions.Add(tempSurveyUserQuestionOption);
+                        }
+                        addToList = false;
+                        break;
+                    default:
+                        surveyUserQuestionOption.CustomAnswer = requestViewModel.text; 
+                        break;
+                }
+
+                if (addToList) lstSurveyUserQuestionOptions.Add(surveyUserQuestionOption);
+            }
+
+            _dBContext.SurveyUserQuestionOptions.AddRange(lstSurveyUserQuestionOptions);
+            surveyUsers.CompletedDatetime = DateTime.UtcNow;
+            _dBContext.Update(surveyUsers);
+            _dBContext.SaveChanges();
+
+            return Ok();
+        }
+
+
+        [Route("questiontypes")]
+        [HttpGet]
+        public IActionResult GetQuestionTypes()
+        {
+            List<QuestionType> lstQuestionTypes = _dBContext.QuestionType.Where(x => x.IsActive == 1).OrderBy(x => x.DisplayOrder).ToList();
+            List<QuestionTypesViewModel> questionTypesViewModels = new List<QuestionTypesViewModel>();
+            foreach (var item in lstQuestionTypes)
+            {
+                QuestionTypesViewModel questionTypesViewModel = new QuestionTypesViewModel();
+                questionTypesViewModel.id = item.TypeId;
+                questionTypesViewModel.code = item.TypeCode;
+                questionTypesViewModel.name = item.TypeValue;
+                questionTypesViewModels.Add(questionTypesViewModel);
+            }
+
+            return Ok(questionTypesViewModels);
         }
 
         [Route("begin")]

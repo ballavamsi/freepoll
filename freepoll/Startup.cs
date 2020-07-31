@@ -49,7 +49,9 @@ namespace freepoll
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
             });
-            services.AddDbContext<FreePollDBContext>(options => options.UseMySQL(Environment.GetEnvironmentVariable("FREEPOLLMYSQL")));
+            services.AddDbContext<FreePollDBContext>(options => {
+                options.UseMySQL(Environment.GetEnvironmentVariable("FREEPOLLMYSQL"));
+            });
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddAutoMapper(typeof(Startup));
         }

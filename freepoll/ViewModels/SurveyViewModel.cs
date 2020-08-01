@@ -18,6 +18,8 @@ namespace freepoll.ViewModels
         public int Emailidrequired { get; set; }
 
         public int Askemail { get; set; }
+
+        public int Enableprevious { get; set; }
         public string SurveyGuid { get; set; }
         public List<SurveyQuestionsViewModel> SurveyQuestions { get; set; }
     }

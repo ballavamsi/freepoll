@@ -26,7 +26,6 @@ namespace freepoll.Models
         public virtual DbSet<SurveyUser> SurveyUser { get; set; }
         public virtual DbSet<SurveyUserQuestionOptions> SurveyUserQuestionOptions { get; set; }
 
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Poll>(entity =>
@@ -232,6 +231,10 @@ namespace freepoll.Models
 
                 entity.Property(e => e.Emailidrequired)
                     .HasColumnName("emailidrequired")
+                    .HasColumnType("int(1) unsigned zerofill");
+
+                entity.Property(e => e.Enableprevious)
+                    .HasColumnName("enableprevious")
                     .HasColumnType("int(1) unsigned zerofill");
 
                 entity.Property(e => e.Enddate)

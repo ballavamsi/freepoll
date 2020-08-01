@@ -15,7 +15,6 @@ namespace freepoll.Models
         {
         }
 
-        public virtual DbSet<Controls> Controls { get; set; }
         public virtual DbSet<Poll> Poll { get; set; }
         public virtual DbSet<PollOptions> PollOptions { get; set; }
         public virtual DbSet<PollVotes> PollVotes { get; set; }
@@ -26,8 +25,6 @@ namespace freepoll.Models
         public virtual DbSet<SurveyQuestions> SurveyQuestions { get; set; }
         public virtual DbSet<SurveyUser> SurveyUser { get; set; }
         public virtual DbSet<SurveyUserQuestionOptions> SurveyUserQuestionOptions { get; set; }
-        public virtual DbSet<SurveyUserQuestionValues> SurveyUserQuestionValues { get; set; }
-        public virtual DbSet<TypeControls> TypeControls { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -40,21 +37,6 @@ namespace freepoll.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Controls>(entity =>
-            {
-                entity.HasKey(e => e.ControlId)
-                    .HasName("PRIMARY");
-
-                entity.Property(e => e.ControlId)
-                    .HasColumnName("control_id")
-                    .HasColumnType("int(11)");
-
-                entity.Property(e => e.ControlText)
-                    .HasColumnName("control_text")
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-            });
-
             modelBuilder.Entity<Poll>(entity =>
             {
                 entity.HasComment("polling details");
@@ -193,17 +175,29 @@ namespace freepoll.Models
 
             modelBuilder.Entity<QuestionType>(entity =>
             {
-                entity.HasNoKey();
+                entity.HasKey(e => e.TypeId)
+                    .HasName("PRIMARY");
 
                 entity.ToTable("Question_Type");
-
-                entity.Property(e => e.IsActive)
-                    .HasColumnName("is_active")
-                    .HasColumnType("int(1) unsigned zerofill");
 
                 entity.Property(e => e.TypeId)
                     .HasColumnName("type_id")
                     .HasColumnType("int(10)");
+
+                entity.Property(e => e.DisplayOrder)
+                    .HasColumnName("display_order")
+                    .HasColumnType("int(11)")
+                    .HasDefaultValueSql("'1'");
+
+                entity.Property(e => e.IsActive)
+                    .HasColumnName("is_active")
+                    .HasColumnType("int(1) unsigned zerofill")
+                    .HasDefaultValueSql("'1'");
+
+                entity.Property(e => e.TypeCode)
+                    .HasColumnName("type_code")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
 
                 entity.Property(e => e.TypeValue)
                     .HasColumnName("type_value")
@@ -232,6 +226,10 @@ namespace freepoll.Models
 
                 entity.Property(e => e.Allowduplicate)
                     .HasColumnName("allowduplicate")
+                    .HasColumnType("int(1) unsigned zerofill");
+
+                entity.Property(e => e.Askemail)
+                    .HasColumnName("askemail")
                     .HasColumnType("int(1) unsigned zerofill");
 
                 entity.Property(e => e.CreatedBy)
@@ -270,6 +268,11 @@ namespace freepoll.Models
 
                 entity.Property(e => e.UpdatedDate).HasColumnName("updated_date");
 
+                entity.Property(e => e.Welcomedescription)
+                    .HasColumnName("welcomedescription")
+                    .HasMaxLength(1000)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.Welcomeimage)
                     .HasColumnName("welcomeimage")
                     .HasMaxLength(100)
@@ -299,6 +302,10 @@ namespace freepoll.Models
 
                 entity.Property(e => e.CreatedDate).HasColumnName("created_date");
 
+                entity.Property(e => e.DisplayOrder)
+                    .HasColumnName("display_order")
+                    .HasColumnType("int(11)");
+
                 entity.Property(e => e.OptionKey)
                     .HasColumnName("option_key")
                     .HasMaxLength(100)
@@ -306,7 +313,7 @@ namespace freepoll.Models
 
                 entity.Property(e => e.OptionValue)
                     .HasColumnName("option_value")
-                    .HasMaxLength(100)
+                    .HasMaxLength(8000)
                     .IsUnicode(false);
 
                 entity.Property(e => e.SurveyQuestionId)
@@ -382,10 +389,25 @@ namespace freepoll.Models
                     .HasColumnName("survey_user_id")
                     .HasColumnType("int(10)");
 
+                entity.Property(e => e.CompletedDatetime).HasColumnName("completed_datetime");
+
+                entity.Property(e => e.InsertedDatetime)
+                    .HasColumnName("inserted_datetime")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.Property(e => e.SurveyId)
+                    .HasColumnName("survey_id")
+                    .HasColumnType("int(11)");
+
                 entity.Property(e => e.SurveyUserEmail)
                     .IsRequired()
                     .HasColumnName("survey_user_email")
                     .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.SurveyUserGuid)
+                    .HasColumnName("survey_user_guid")
+                    .HasMaxLength(1000)
                     .IsUnicode(false);
             });
 
@@ -397,69 +419,26 @@ namespace freepoll.Models
                     .HasColumnName("id")
                     .HasColumnType("int(10)");
 
-                entity.Property(e => e.SurveyUserQuestionId)
-                    .HasColumnName("survey_user_question_id")
+                entity.Property(e => e.CustomAnswer)
+                    .HasColumnName("custom_answer")
+                    .HasMaxLength(10000)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.InsertedDatetime)
+                    .HasColumnName("inserted_datetime")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.Property(e => e.SurveyQuestionId)
+                    .HasColumnName("survey_question_id")
                     .HasColumnType("int(10)");
 
-                entity.Property(e => e.SurveyUserQuestionOptionid)
-                    .HasColumnName("survey_user_question_optionid")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.SurveyUserQuestionOptionvalueq)
-                    .HasColumnName("survey_user_question_optionvalueq")
+                entity.Property(e => e.SurveyQuestionOptionId)
+                    .HasColumnName("survey_question_option_id")
                     .HasMaxLength(100)
                     .IsUnicode(false);
-            });
-
-            modelBuilder.Entity<SurveyUserQuestionValues>(entity =>
-            {
-                entity.HasKey(e => e.SurveyUserQuestionValueId)
-                    .HasName("PRIMARY");
-
-                entity.ToTable("Survey_User_Question_Values");
-
-                entity.Property(e => e.SurveyUserQuestionValueId)
-                    .HasColumnName("survey_user_question_value_id")
-                    .HasColumnType("int(10)");
 
                 entity.Property(e => e.SurveyUserId)
                     .HasColumnName("survey_user_id")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.SurveyUserQuestionId)
-                    .HasColumnName("survey_user_question_id")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.SurveyUserTypeId)
-                    .HasColumnName("survey_user_type_id")
-                    .HasColumnType("int(10)");
-            });
-
-            modelBuilder.Entity<TypeControls>(entity =>
-            {
-                entity.HasKey(e => e.TypeControlId)
-                    .HasName("PRIMARY");
-
-                entity.ToTable("Type_Controls");
-
-                entity.Property(e => e.TypeControlId)
-                    .HasColumnName("type_control_id")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.ControlId)
-                    .HasColumnName("control_id")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.DisplayOrder)
-                    .HasColumnName("display_order")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.IsActive)
-                    .HasColumnName("is_active")
-                    .HasColumnType("int(1)");
-
-                entity.Property(e => e.TypeId)
-                    .HasColumnName("type_id")
                     .HasColumnType("int(10)");
             });
 

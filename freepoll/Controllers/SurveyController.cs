@@ -43,6 +43,7 @@ namespace freepoll.Controllers
             s.CreatedDate = DateTime.UtcNow;
             s.Allowduplicate = newSurvey.Allowduplicate;
             s.Emailidrequired = newSurvey.Emailidrequired;
+            s.Askemail = newSurvey.Askemail;
             s.SurveyGuid = ShortUrl.GenerateShortUrl();
 
             _dBContext.Survey.Add(s);
@@ -110,6 +111,7 @@ namespace freepoll.Controllers
             surview.Welcometitle = sur.Welcometitle;
             surview.WelcomeDescription = sur.Welcomedescription;
             surview.Emailidrequired = sur.Emailidrequired;
+            surview.Askemail = sur.Askemail;
             surview.Endtitle = sur.Endtitle;
             surview.Welcomeimage = sur.Welcomeimage;
             surview.SurveyGuid = sur.SurveyGuid;
@@ -156,6 +158,7 @@ namespace freepoll.Controllers
                 surv.Welcometitle = sur.Welcometitle;
                 surv.WelcomeDescription = sur.Welcomedescription;
                 surv.Emailidrequired = sur.Emailidrequired;
+                surv.Askemail = sur.Askemail;
                 surv.Endtitle = sur.Endtitle;
                 surv.SurveyId = sur.Surveyid;
                 surv.Welcomeimage = sur.Welcomeimage;
@@ -315,49 +318,5 @@ namespace freepoll.Controllers
 
             return Ok(questionTypesViewModels);
         }
-
-        [Route("begin")]
-        [HttpPut]
-        public int BeginSurvey([FromBody] string emailid)
-        {
-            int userid = 0;
-
-            SurveyUser suser = new SurveyUser();
-
-            suser.SurveyUserEmail = emailid;
-
-            _dBContext.SurveyUser.Add(suser);
-            _dBContext.SaveChanges();
-
-            userid = suser.SurveyUserId;
-            TempData["SurveyUserId"] = userid;
-            return userid;
-        }
-
-        [Route("Next")]
-        [HttpPut]
-        public int NextPageofSurvey([FromBody] SurveyQuestionsViewModel questions)
-        {
-            int userid = 0;
-
-            userid = Convert.ToInt32(TempData["SurveyUserId"]);
-
-            SurveyUserQuestionValues userquestions = new SurveyUserQuestionValues();
-            userquestions.SurveyUserId = userid;
-            userquestions.SurveyUserQuestionId = questions.SurveyQuestionId;
-            userquestions.SurveyUserTypeId = questions.TypeId;
-
-            _dBContext.SurveyUserQuestionValues.Add(userquestions);
-            _dBContext.SaveChanges();
-
-            SurveyUserQuestionOptions userquestionoptions = new SurveyUserQuestionOptions();
-            userquestionoptions.SurveyUserQuestionId = userquestions.SurveyUserQuestionId;
-
-            _dBContext.SurveyUserQuestionOptions.Add(userquestionoptions);
-            _dBContext.SaveChanges();
-
-            return userid;
-        }
-
     }
 }

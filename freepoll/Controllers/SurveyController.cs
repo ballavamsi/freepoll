@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using freepoll.ViewModels;
 using freepoll.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using freepoll.Helpers;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Newtonsoft.Json.Linq;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace freepoll.Controllers
 {
@@ -43,6 +39,7 @@ namespace freepoll.Controllers
             s.CreatedDate = DateTime.UtcNow;
             s.Allowduplicate = newSurvey.Allowduplicate;
             s.Emailidrequired = newSurvey.Emailidrequired;
+            s.Askemail = newSurvey.Askemail;
             s.SurveyGuid = ShortUrl.GenerateShortUrl();
 
             _dBContext.Survey.Add(s);
@@ -110,6 +107,7 @@ namespace freepoll.Controllers
             surview.Welcometitle = sur.Welcometitle;
             surview.WelcomeDescription = sur.Welcomedescription;
             surview.Emailidrequired = sur.Emailidrequired;
+            surview.Askemail = sur.Askemail;
             surview.Endtitle = sur.Endtitle;
             surview.Welcomeimage = sur.Welcomeimage;
             surview.SurveyGuid = sur.SurveyGuid;
@@ -156,6 +154,7 @@ namespace freepoll.Controllers
                 surv.Welcometitle = sur.Welcometitle;
                 surv.WelcomeDescription = sur.Welcomedescription;
                 surv.Emailidrequired = sur.Emailidrequired;
+                surv.Askemail = sur.Askemail;
                 surv.Endtitle = sur.Endtitle;
                 surv.SurveyId = sur.Surveyid;
                 surv.Welcomeimage = sur.Welcomeimage;

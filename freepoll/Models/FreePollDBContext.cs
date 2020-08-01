@@ -26,6 +26,7 @@ namespace freepoll.Models
         public virtual DbSet<SurveyUser> SurveyUser { get; set; }
         public virtual DbSet<SurveyUserQuestionOptions> SurveyUserQuestionOptions { get; set; }
 
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Poll>(entity =>
@@ -217,6 +218,10 @@ namespace freepoll.Models
 
                 entity.Property(e => e.Allowduplicate)
                     .HasColumnName("allowduplicate")
+                    .HasColumnType("int(1) unsigned zerofill");
+
+                entity.Property(e => e.Askemail)
+                    .HasColumnName("askemail")
                     .HasColumnType("int(1) unsigned zerofill");
 
                 entity.Property(e => e.CreatedBy)

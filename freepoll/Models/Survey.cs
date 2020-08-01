@@ -19,5 +19,6 @@ namespace freepoll.Models
         public int? UpdatedBy { get; set; }
         public string SurveyGuid { get; set; }
         public int Emailidrequired { get; set; }
+        public int Askemail { get; set; }
     }
 }

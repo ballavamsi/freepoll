@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using freepoll.ViewModels;
 using freepoll.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using freepoll.Helpers;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Newtonsoft.Json.Linq;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace freepoll.Controllers
 {

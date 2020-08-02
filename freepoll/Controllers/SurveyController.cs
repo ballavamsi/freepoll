@@ -40,6 +40,7 @@ namespace freepoll.Controllers
             s.Allowduplicate = newSurvey.Allowduplicate;
             s.Emailidrequired = newSurvey.Emailidrequired;
             s.Askemail = newSurvey.Askemail;
+            s.Enableprevious = newSurvey.Enableprevious;
             s.SurveyGuid = ShortUrl.GenerateShortUrl();
 
             _dBContext.Survey.Add(s);
@@ -108,6 +109,7 @@ namespace freepoll.Controllers
             surview.WelcomeDescription = sur.Welcomedescription;
             surview.Emailidrequired = sur.Emailidrequired;
             surview.Askemail = sur.Askemail;
+            surview.Enableprevious = sur.Enableprevious;
             surview.Endtitle = sur.Endtitle;
             surview.Welcomeimage = sur.Welcomeimage;
             surview.SurveyGuid = sur.SurveyGuid;
@@ -155,6 +157,7 @@ namespace freepoll.Controllers
                 surv.WelcomeDescription = sur.Welcomedescription;
                 surv.Emailidrequired = sur.Emailidrequired;
                 surv.Askemail = sur.Askemail;
+                surv.Enableprevious = sur.Enableprevious;
                 surv.Endtitle = sur.Endtitle;
                 surv.SurveyId = sur.Surveyid;
                 surv.Welcomeimage = sur.Welcomeimage;

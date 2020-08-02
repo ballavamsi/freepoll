@@ -20,5 +20,6 @@ namespace freepoll.Models
         public string SurveyGuid { get; set; }
         public int Emailidrequired { get; set; }
         public int Askemail { get; set; }
+        public int Enableprevious { get; set; }
     }
 }

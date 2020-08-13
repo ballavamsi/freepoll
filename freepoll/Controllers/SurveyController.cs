@@ -317,5 +317,12 @@ namespace freepoll.Controllers
 
             return Ok(questionTypesViewModels);
         }
+
+        [Route("data/staroptions")]
+        [HttpGet]
+        public IActionResult GetDataForStarOptions()
+        {
+            return Ok(_dBContext.DataStarOptions.Where(x => x.IsActive == 1).OrderBy(x => x.DisplayOrder).ToList());
+        }
     }
 }

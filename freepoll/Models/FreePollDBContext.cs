@@ -15,6 +15,7 @@ namespace freepoll.Models
         {
         }
 
+        public virtual DbSet<DataStarOptions> DataStarOptions { get; set; }
         public virtual DbSet<Poll> Poll { get; set; }
         public virtual DbSet<PollOptions> PollOptions { get; set; }
         public virtual DbSet<PollVotes> PollVotes { get; set; }
@@ -28,6 +29,38 @@ namespace freepoll.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<DataStarOptions>(entity =>
+            {
+                entity.HasKey(e => e.StarOptionId)
+                    .HasName("PRIMARY");
+
+                entity.ToTable("Data_StarOptions");
+
+                entity.Property(e => e.StarOptionId)
+                    .HasColumnName("star_option_id")
+                    .HasColumnType("int(11)");
+
+                entity.Property(e => e.DisplayOrder)
+                    .HasColumnName("display_order")
+                    .HasColumnType("int(11)")
+                    .HasDefaultValueSql("'1'");
+
+                entity.Property(e => e.IsActive)
+                    .HasColumnName("is_active")
+                    .HasColumnType("int(11)")
+                    .HasDefaultValueSql("'1'");
+
+                entity.Property(e => e.OptionDisplayText)
+                    .HasColumnName("option_display_text")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.OptionText)
+                    .HasColumnName("option_text")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+            });
+
             modelBuilder.Entity<Poll>(entity =>
             {
                 entity.HasComment("polling details");

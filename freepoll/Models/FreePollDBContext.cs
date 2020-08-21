@@ -26,7 +26,9 @@ namespace freepoll.Models
         public virtual DbSet<SurveyQuestions> SurveyQuestions { get; set; }
         public virtual DbSet<SurveyUser> SurveyUser { get; set; }
         public virtual DbSet<SurveyUserQuestionOptions> SurveyUserQuestionOptions { get; set; }
+        public virtual DbSet<User> User { get; set; }
 
+      
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<DataStarOptions>(entity =>
@@ -468,6 +470,66 @@ namespace freepoll.Models
                 entity.Property(e => e.SurveyUserId)
                     .HasColumnName("survey_user_id")
                     .HasColumnType("int(10)");
+            });
+
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.Property(e => e.Userid)
+                    .HasColumnName("userid")
+                    .HasColumnType("int(11)");
+
+                entity.Property(e => e.CreatedTime)
+                    .HasColumnName("created_time")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.Property(e => e.Email)
+                    .IsRequired()
+                    .HasColumnName("email")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Facebook)
+                    .HasColumnName("facebook")
+                    .HasMaxLength(1000)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Github)
+                    .HasColumnName("github")
+                    .HasMaxLength(1000)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Google)
+                    .HasColumnName("google")
+                    .HasMaxLength(1000)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasColumnName("name")
+                    .HasMaxLength(1000)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Password)
+                    .IsRequired()
+                    .HasColumnName("password")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.PhotoUrl)
+                    .HasColumnName("photo_url")
+                    .HasMaxLength(1000)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Status)
+                    .HasColumnName("status")
+                    .HasColumnType("int(11)")
+                    .HasDefaultValueSql("'1'");
+
+                entity.Property(e => e.UserGuid)
+                    .IsRequired()
+                    .HasColumnName("user_guid")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
             });
 
             OnModelCreatingPartial(modelBuilder);

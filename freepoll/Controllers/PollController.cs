@@ -28,8 +28,8 @@ namespace freepoll.Controllers
 
         [Route("add")]
         [HttpPut]
-        public PollViewModel AddNewPoll([FromBody]NewPollViewModel newPoll){
-
+        public PollViewModel AddNewPoll([FromBody]NewPollViewModel newPoll)
+        {
             int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
             Poll p = new Poll();
             p.Name = newPoll.name;
@@ -94,7 +94,6 @@ namespace freepoll.Controllers
             pollView.PollOptions = options;
             return Ok(pollView);
         }
-
 
         [Route("vote")]
         [HttpPut]

@@ -23,92 +23,95 @@ namespace freepoll.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
 
-        [Route("userregistration")]
-        [HttpPut]
+        //[Route("register")]
+        //[HttpPut]
 
-        public IActionResult RegisterPollUser([FromBody] UserViewModel newUser)
-        {
-            int result = 0;
-            UserResponseViewModel dynamicresponse = new UserResponseViewModel();
-            User olduser = _dBContext.User.Where(x => x.Email == newUser.userEmail.ToLower()).FirstOrDefault();
-            if (olduser != null)
-            {
-                User user = new User();
-                user.Name = newUser.userName;
-                user.Email = newUser.userEmail;
-                user.Password = newUser.password;
-                user.Github = newUser.github;
-                user.Google = newUser.google;
-                user.Facebook = newUser.facebook;
-                user.CreatedTime = DateTime.UtcNow;
-                user.UserGuid = Guid.NewGuid().ToString();
+        //public IActionResult RegisterPollUser([FromBody] UserViewModel newUser)
+        //{
+        //    int result = 0;
+        //    UserResponseViewModel userResponseViewModel = new UserResponseViewModel();
+        //    User olduser = _dBContext.User.Where(x => x.Email == newUser.userEmail.ToLower()).FirstOrDefault();
+        //    if (olduser != null)
+        //    {
+        //        User user = new User();
+        //        user.Name = newUser.userName;
+        //        user.Email = newUser.userEmail;
+        //        //user.Password = newUser.password;
+        //        user.PhotoUrl = newUser.profileUrl;
+        //        user.Github = newUser.github;
+        //        user.Google = newUser.google;
+        //        user.Facebook = newUser.facebook;
+        //        user.CreatedTime = DateTime.UtcNow;
+        //        user.Status = 1;
+        //        user.UserGuid = Guid.NewGuid().ToString();
 
-                _dBContext.User.Add(user);
-                result = _dBContext.SaveChanges();
+        //        _dBContext.User.Add(user);
+        //        result = _dBContext.SaveChanges();
 
-                if (result > 0)
-                {
-                    dynamicresponse.UserGuid = user.UserGuid;
-                }
-                else
-                {
-                    return BadRequest("Registration Failed . Please try again");
-                    
-                }
-            }
-            else
-            {
-                return BadRequest("User already exists");
-            }
+        //        if (result > 0)
+        //        {
+        //            userResponseViewModel.profileUrl = user.PhotoUrl;
+        //            userResponseViewModel.userName = user.Name;
+        //            userResponseViewModel.userEmail = user.Email;
+        //            userResponseViewModel.UserGuid = user.UserGuid;
+        //        }
+        //        else
+        //        {
+        //            return BadRequest("Registration Failed . Please try again");
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return BadRequest("User already exists");
+        //    }
 
-            return Ok(dynamicresponse);
-        }
+        //    return Ok(userResponseViewModel);
+        //}
 
-        [Route("userlogin")]
+        [Route("login")]
         [HttpGet]
         public IActionResult UserLogin(LoginViewModel logindetails)
         {
             User user = new User();
+            UserResponseViewModel userResponseViewModel = new UserResponseViewModel();
 
+            user = _dBContext.User.Where(x => x.Email == logindetails.email.ToLower()).FirstOrDefault();
 
-            if(string.IsNullOrEmpty(logindetails.loginpassword))
+            if(user == null)
             {
-                user = _dBContext.User.Where(x => x.Email == logindetails.loginemail.ToLower() && x.Password == logindetails.loginpassword.ToLower()).FirstOrDefault();
+                user = new User();
+                user.Name = logindetails.name;
+                user.Email = logindetails.email;
+                //user.Password = newUser.password;
+                user.PhotoUrl = logindetails.platformdetail.platformImage;
+                user.Github = logindetails.platformdetail.platform == "github" ? logindetails.platformdetail.platformid : string.Empty;
+                user.Google = logindetails.platformdetail.platform == "google" ? logindetails.platformdetail.platformid : string.Empty;
+                user.Facebook = logindetails.platformdetail.platform == "facebook" ? logindetails.platformdetail.platformid : string.Empty;
+                user.CreatedTime = DateTime.UtcNow;
+                user.Status = 1;
+                user.UserGuid = Guid.NewGuid().ToString();
+
+                _dBContext.User.Add(user);
+                int result = _dBContext.SaveChanges();
+            }
+
+            if (user.Status == 0)
+                return BadRequest("InactiveUser");
+
+            if (logindetails.platformdetail.platform.ToLower() == "google" && user.Google == logindetails.platformdetail.platformid ||
+               logindetails.platformdetail.platform.ToLower() == "github" && user.Github == logindetails.platformdetail.platformid ||
+               logindetails.platformdetail.platform.ToLower() == "facebook" && user.Facebook == logindetails.platformdetail.platformid)
+            {
+                userResponseViewModel.profileUrl = user.PhotoUrl;
+                userResponseViewModel.userName = user.Name;
+                userResponseViewModel.userEmail = user.Email;
+                userResponseViewModel.UserGuid = user.UserGuid;
             }
             else
             {
-                if(logindetails.platformdetail.platform.ToLower() == "google")
-                {
-                    user = _dBContext.User.Where(x => x.Email == logindetails.loginemail.ToLower() && x.Google == logindetails.platformdetail.platformid.ToLower()).FirstOrDefault();
-                }
-                else if (logindetails.platformdetail.platform.ToLower() == "github")
-                {
-                    user = _dBContext.User.Where(x => x.Email == logindetails.loginemail.ToLower() && x.Github == logindetails.platformdetail.platformid.ToLower()).FirstOrDefault();
-                }
-                else if (logindetails.platformdetail.platform.ToLower() == "facebook")
-                {
-                    user = _dBContext.User.Where(x => x.Email == logindetails.loginemail.ToLower() && x.Facebook == logindetails.platformdetail.platformid.ToLower()).FirstOrDefault();
-                }
-
+                return BadRequest("InvalidUser");
             }
-
-            UserResponseViewModel login = new UserResponseViewModel();
-
-            if (user != null)
-            {
-                login.UserGuid = user.UserGuid;
-            }
-            else
-            {
-                return BadRequest("Invalid Login");
-            }
-
-            return Ok(login);
+            return Ok(userResponseViewModel);
         }
-
-
-        //[Route("userpoll/{userGuid}")]
-
-
     }
 }

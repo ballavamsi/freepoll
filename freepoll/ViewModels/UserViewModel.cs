@@ -5,20 +5,6 @@ using System.Threading.Tasks;
 
 namespace freepoll.ViewModels
 {
-    public class UserViewModel
-    {
-        public int userid { get; set; }
-        public string userName { get; set; }
-        public string userEmail { get; set; }
-        public string password { get; set; }
-        public string profileUrl { get; set; }
-        public string github { get; set; }
-        public string google { get; set; }
-        public string facebook { get; set; }
-        public DateTime createdTime { get; set; }
-        public string userGuid { get; set; }
-        public int status { get; set; }
-    }
 
     public class UserResponseViewModel
     {
@@ -44,5 +30,25 @@ namespace freepoll.ViewModels
         public string platform { get; set; }
         public string platformid { get; set; }
         public string platformImage { get; set; }
+    }
+
+    public class UserPoll
+    {
+        public int pollId { get; set; }
+        public string pollguid { get; set; }
+        public string status { get; set; }
+        public DateTime date { get; set; }
+
+        public string Votes { get; set; }
+
+        public string pollname { get; set; }
+    }
+
+    public class UserPollResponse
+    {
+        public List<UserPoll> userPolls { get; set; }
+        public int userpollscount { get; set; }
+
+        public string Response { get; set; }
     }
 }

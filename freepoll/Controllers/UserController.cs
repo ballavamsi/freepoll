@@ -7,6 +7,8 @@ using freepoll.Models;
 using freepoll.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using freepoll.Common;
+using static freepoll.Common.ResponseMessages;
 
 namespace freepoll.Controllers
 {
@@ -96,7 +98,7 @@ namespace freepoll.Controllers
             }
 
             if (user.Status == 0)
-                return BadRequest("InactiveUser");
+                return BadRequest(Messages.Inactiveusererror);
 
             if(logindetails.platformdetail.platform.ToLower() == "google" && string.IsNullOrEmpty(user.Google))
             {
@@ -104,13 +106,13 @@ namespace freepoll.Controllers
                 _dBContext.User.Update(user);
                 _dBContext.SaveChanges();
             }
-            if (logindetails.platformdetail.platform.ToLower() == "facebook" && string.IsNullOrEmpty(user.Google))
+            if (logindetails.platformdetail.platform.ToLower() == "facebook" && string.IsNullOrEmpty(user.Facebook))
             {
                 user.Facebook = logindetails.platformdetail.platformid;
                 _dBContext.User.Update(user);
                 _dBContext.SaveChanges();
             }
-            if (logindetails.platformdetail.platform.ToLower() == "github" && string.IsNullOrEmpty(user.Google))
+            if (logindetails.platformdetail.platform.ToLower() == "github" && string.IsNullOrEmpty(user.Github))
             {
                 user.Github = logindetails.platformdetail.platformid;
                 _dBContext.User.Update(user);
@@ -123,14 +125,93 @@ namespace freepoll.Controllers
             {
                 userResponseViewModel.profileUrl = user.PhotoUrl;
                 userResponseViewModel.userName = user.Name;
-                userResponseViewModel.userEmail = user.Email;
-                userResponseViewModel.UserGuid = user.UserGuid;
+                userResponseViewModel.userEmail = user.Email;             
+                string encryptedString = Security.EncryptString(user.UserGuid);
+                userResponseViewModel.UserGuid = encryptedString;
+
             }
             else
             {
-                return BadRequest("InvalidUser");
+                return BadRequest(Messages.Inactiveusererror);
             }
             return Ok(userResponseViewModel);
         }
+
+        [Route("userpoll")]
+        [HttpGet]
+
+        public IActionResult UserPoll([FromBody] int pagenum, int pagesize)
+        {
+
+            string userguid = Request.Headers["userguid"];
+
+            List<UserPoll> userpollslist = new List<UserPoll>();
+            UserPollResponse userpollres = new UserPollResponse();
+
+            string decyrptstring = Security.DecryptString(userguid);
+          
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest("Unauthorized User");
+
+            int decrpteduser = Convert.ToInt32(decyrptstring);
+
+            User user = _dBContext.User.Where(x => x.Userid == decrpteduser).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            List<Status> statuses = _dBContext.Status.ToList();
+
+            var listpoll = from poll in _dBContext.Poll
+                            where poll.CreatedBy == decrpteduser && poll.StatusId != 3
+                            select new UserPoll
+                            {
+                               pollId = poll.PollId,
+                               pollguid = poll.PollGuid,
+                               date = poll.CreatedDate,
+                               pollname = poll.Name,
+                               status = statuses.Where(x=>x.Statusid == poll.StatusId).FirstOrDefault().Statusname,
+                               Votes = "0"
+                            };
+            userpollslist = listpoll.Skip(pagesize * pagenum)
+                             .Take(pagesize).ToList();
+
+            userpollres.userPolls = userpollslist;
+            userpollres.userpollscount = userpollslist.Count;
+
+            return Ok(userpollres);
+        }
+
+        [Route("userpolldelete")]
+        [HttpDelete]
+
+        public IActionResult UserPollDelete([FromBody] int pollId)
+        {
+            UserPollResponse response = new UserPollResponse();
+
+            string userguid = Request.Headers["userguid"];
+            string decyrptstring = Security.DecryptString(userguid);
+
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
+
+            int decrpteduser = Convert.ToInt32(decyrptstring);
+
+            User user = _dBContext.User.Where(x => x.Userid == decrpteduser).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            Poll poll = _dBContext.Poll.Where(x => x.CreatedBy == decrpteduser && x.PollId == pollId).FirstOrDefault();
+
+            if(poll == null) return BadRequest(Messages.PollNotFoundError);       
+            
+            poll.StatusId = 3;
+
+            int result = _dBContext.SaveChanges();
+
+            if(result > 0)
+            {
+                response.Response = Messages.PollDeleteSuccess;
+            }
+            return Ok(response);
+        }
+
     }
 }

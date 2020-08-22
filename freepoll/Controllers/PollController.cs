@@ -10,6 +10,8 @@ using freepoll.UserModels;
 using Microsoft.AspNetCore.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Dynamic;
+using freepoll.Common;
+using static freepoll.Common.ResponseMessages;
 
 namespace freepoll.Controllers
 {
@@ -19,6 +21,7 @@ namespace freepoll.Controllers
         private readonly FreePollDBContext _dBContext;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        
         public PollController(FreePollDBContext dBContext, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _dBContext = dBContext;
@@ -28,15 +31,26 @@ namespace freepoll.Controllers
 
         [Route("add")]
         [HttpPut]
-        public PollViewModel AddNewPoll([FromBody]NewPollViewModel newPoll)
+        public IActionResult AddNewPoll([FromBody]NewPollViewModel newPoll)
         {
-            int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
+            //     int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
+
+            string userId = Request.Headers["userid"];
+            string decyrptstring = Security.DecryptString(userId);
+            if (decyrptstring == null) return BadRequest();
+
+            int decrpteduser = Convert.ToInt32(decyrptstring);
+
+            User user = _dBContext.User.Where(x => x.Userid == decrpteduser).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
             Poll p = new Poll();
             p.Name = newPoll.name;
-            p.StatusId = PublishedStatusId;
+            p.StatusId = newPoll.status;
             p.Enddate = Convert.ToDateTime(newPoll.endDate);
             p.CreatedDate = DateTime.UtcNow;
-            p.CreatedBy = Resources.SystemUser;
+            p.CreatedBy = decrpteduser;
             p.Type = Int16.Parse(newPoll.type);
             p.Duplicate = Int16.Parse(newPoll.duplicate);
             p.PollGuid = ShortUrl.GenerateShortUrl();
@@ -52,7 +66,7 @@ namespace freepoll.Controllers
                 PollOptions options = new PollOptions();
                 options.PollId = p.PollId;
                 options.OptionText = item;
-                options.StatusId = PublishedStatusId;
+                options.StatusId = p.StatusId;
                 options.CreatedBy = Resources.SystemUser;
                 options.CreatedDate = DateTime.UtcNow;
                 options.OrderId = order;
@@ -67,7 +81,7 @@ namespace freepoll.Controllers
 
         [Route("{id}")]
         [HttpGet]
-        public PollViewModel GetPoll(int id)
+        public IActionResult GetPoll(int id)
         {
             Poll poll = _dBContext.Poll.Where(x => x.PollId == id).FirstOrDefault();
 
@@ -76,7 +90,7 @@ namespace freepoll.Controllers
 
             List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == id).ToList();
             pollView.PollOptions = options;
-            return pollView;
+            return Ok(pollView);
         }
 
         [Route("guid/{guid}")]
@@ -85,8 +99,8 @@ namespace freepoll.Controllers
         {
             Poll poll = _dBContext.Poll.Where(x => x.PollGuid.Trim().Equals(guid.Trim())).FirstOrDefault();
 
-            if(poll == null)  return NotFound("PollNotFound");
-            if (poll.Enddate <= DateTime.Now.Date.AddDays(1).AddSeconds(-1)) return BadRequest("PollEnded");
+            if(poll == null)  return NotFound(Messages.PollNotFoundError);
+            if (poll.Enddate <= DateTime.Now.Date.AddDays(1).AddSeconds(-1)) return BadRequest(Messages.PollEnded);
 
             PollViewModel pollView = _mapper.Map<PollViewModel>(poll);
 
@@ -101,15 +115,15 @@ namespace freepoll.Controllers
         {
             var poll = _dBContext.Poll.Where(x => x.PollId == newPoll.pollId).FirstOrDefault();
 
-            if (poll == null) return BadRequest("PollNotFound");
-            if (poll.Enddate <= DateTime.Now.Date.AddDays(1).AddSeconds(-1)) return BadRequest("PollEnded");
+            if (poll == null) return BadRequest(Messages.PollNotFoundError);
+            if (poll.Enddate <= DateTime.Now.Date.AddDays(1).AddSeconds(-1)) return BadRequest(Messages.PollEnded);
 
             IPLocation userLocationDetails = LocationHelper.GetIpAndLocation(_httpContextAccessor);
 
             if(poll.Duplicate == 0)
             {
                 var voted = _dBContext.PollVotes.Where(x => x.IpAddress == userLocationDetails.IP && x.UserLocation == userLocationDetails.Region).Any();
-                if (voted) return BadRequest("PollVoted");
+                if (voted) return BadRequest(Messages.PollVoted);
             }
 
             List<PollVotes> lstPollVotes = new List<PollVotes>();
@@ -133,7 +147,7 @@ namespace freepoll.Controllers
         public IActionResult GetResults(string pollGuid)
         {
             var poll = _dBContext.Poll.Where(x => x.PollGuid == pollGuid).FirstOrDefault();
-            if (poll == null) return BadRequest("PollNotFound");
+            if (poll == null) return BadRequest(Messages.PollNotFoundError);
 
             List<PollVotes> votes = _dBContext.PollVotes.Where(x => x.PollId == poll.PollId).ToList();
             List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == poll.PollId).ToList();

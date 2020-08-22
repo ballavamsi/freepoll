@@ -7,6 +7,8 @@ using freepoll.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using freepoll.Helpers;
+using freepoll.Common;
+using static freepoll.Common.ResponseMessages;
 
 namespace freepoll.Controllers
 {
@@ -102,7 +104,7 @@ namespace freepoll.Controllers
             Survey sur = _dBContext.Survey.Where(x => x.Surveyid == id).FirstOrDefault();
 
             if (sur == null)
-                return BadRequest("SurveyNotFound");
+                return BadRequest(Messages.SurveyNotFoundError);
 
             surview.SurveyId = sur.Surveyid;
             surview.Welcometitle = sur.Welcometitle;
@@ -149,7 +151,7 @@ namespace freepoll.Controllers
             SurveyViewModel surv = new SurveyViewModel();
             Survey sur = _dBContext.Survey.Where(x => x.SurveyGuid == guid).FirstOrDefault();
             if (sur == null)
-                return BadRequest("SurveyNotFound");
+                return BadRequest(Messages.SurveyNotFoundError);
 
             if (sur.SurveyGuid != null)
             {
@@ -209,14 +211,14 @@ namespace freepoll.Controllers
             Survey sur = _dBContext.Survey.Where(x => x.SurveyGuid == guid).FirstOrDefault();
             emailId = Convert.ToString(emailId).ToLower();
             if (sur == null)
-                return BadRequest("SurveyNotFound");
+                return BadRequest(Messages.SurveyNotFoundError);
 
             if (sur.Enddate < DateTime.UtcNow)
-                return BadRequest("SurveyEnded");
+                return BadRequest(Messages.SurveyEnded);
 
             bool checkSurveyEmail = _dBContext.SurveyUser.Any(x => x.SurveyId == sur.Surveyid && x.SurveyUserEmail.ToLower().Equals(emailId));
             if (checkSurveyEmail && Convert.ToBoolean(sur.Emailidrequired) && !string.IsNullOrEmpty(emailId))
-                return BadRequest("SurveyAlreadyTaken");
+                return BadRequest(Messages.SurveyAlreadyTaken);
 
             SurveyUser surveyUser = new SurveyUser();
             surveyUser.SurveyId = sur.Surveyid;
@@ -237,16 +239,16 @@ namespace freepoll.Controllers
             List<QuestionAnswersViewModel> jObject = data.data;
             Survey sur = _dBContext.Survey.Where(x => x.SurveyGuid == guid).FirstOrDefault();
             if (sur == null)
-                return BadRequest("SurveyNotFound");
+                return BadRequest(Messages.SurveyNotFoundError);
 
             if (sur.Enddate < DateTime.UtcNow)
-                return BadRequest("SurveyEnded");
+                return BadRequest(Messages.SurveyEnded);
 
             var surveyUsers = _dBContext.SurveyUser.Where(x => x.SurveyId == sur.Surveyid && x.SurveyUserGuid.Equals(session)).FirstOrDefault();
             if (surveyUsers == null)
-                return BadRequest("SurveyWasNotStartedByUser");
+                return BadRequest(Messages.SurveyWasNotStartedByUser);
             if (surveyUsers.CompletedDatetime != null)
-                return BadRequest("SurveyWasAlreadySubmitted");
+                return BadRequest(Messages.SurveyWasAlreadySubmitted);
 
             List<SurveyQuestions> questions = _dBContext.SurveyQuestions.Where(x => x.SurveyId == sur.Surveyid).ToList();
             List<QuestionType> lstQuestionTypes = _dBContext.QuestionType.ToList();

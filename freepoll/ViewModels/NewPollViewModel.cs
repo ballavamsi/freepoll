@@ -10,5 +10,7 @@ namespace freepoll.ViewModels
         public string type {get;set;}
         public string duplicate {get;set;}
         public DateTime endDate {get;set;}
+
+        public int status { get; set; }
     }
 }

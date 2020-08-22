@@ -98,6 +98,25 @@ namespace freepoll.Controllers
             if (user.Status == 0)
                 return BadRequest("InactiveUser");
 
+            if(logindetails.platformdetail.platform.ToLower() == "google" && string.IsNullOrEmpty(user.Google))
+            {
+                user.Google = logindetails.platformdetail.platformid;
+                _dBContext.User.Update(user);
+                _dBContext.SaveChanges();
+            }
+            if (logindetails.platformdetail.platform.ToLower() == "facebook" && string.IsNullOrEmpty(user.Google))
+            {
+                user.Facebook = logindetails.platformdetail.platformid;
+                _dBContext.User.Update(user);
+                _dBContext.SaveChanges();
+            }
+            if (logindetails.platformdetail.platform.ToLower() == "github" && string.IsNullOrEmpty(user.Google))
+            {
+                user.Github = logindetails.platformdetail.platformid;
+                _dBContext.User.Update(user);
+                _dBContext.SaveChanges();
+            }
+
             if (logindetails.platformdetail.platform.ToLower() == "google" && user.Google == logindetails.platformdetail.platformid ||
                logindetails.platformdetail.platform.ToLower() == "github" && user.Github == logindetails.platformdetail.platformid ||
                logindetails.platformdetail.platform.ToLower() == "facebook" && user.Facebook == logindetails.platformdetail.platformid)

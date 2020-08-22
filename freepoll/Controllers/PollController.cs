@@ -176,6 +176,84 @@ namespace freepoll.Controllers
             return Ok(dynamicData);
         }
 
+
+
+        [Route("user/pagenumber/{pagenum}/pagesize/{pagesize}")]
+        [HttpGet]
+        public IActionResult UserPoll(int pagenum, int pagesize)
+        {
+
+            string userguid = Request.Headers["UserToken"];
+
+            List<UserPoll> userpollslist = new List<UserPoll>();
+            UserPollResponse userpollres = new UserPollResponse();
+
+            string decyrptstring = Security.DecryptString(userguid);
+
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest("Unauthorized User");
+
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            List<Status> statuses = _dBContext.Status.ToList();
+
+            var listpoll = from poll in _dBContext.Poll
+                           where poll.CreatedBy == user.Userid && poll.StatusId != 3
+                           select new UserPoll()
+                           {
+                               pollId = poll.PollId,
+                               pollGuid = poll.PollGuid,
+                               date = poll.CreatedDate,
+                               pollName = poll.Name,
+                               status = poll.StatusId.ToString(),
+                               votes = 0
+                           };
+
+            foreach (var item in listpoll)
+            {
+                item.status = statuses.Where(x => x.Statusid.ToString() == item.status).SingleOrDefault().Statusname;
+            }
+
+            userpollslist = listpoll.ToList().Skip(pagesize * pagenum)
+                             .Take(pagesize).ToList();
+
+            userpollres.userPolls = userpollslist;
+            userpollres.totalPolls = listpoll.ToList().Count;
+
+            return Ok(userpollres);
+        }
+
+
+        [Route("delete/{pollId}")]
+        [HttpDelete]
+        public IActionResult UserPollDelete(int pollId)
+        {
+            UserPollResponse response = new UserPollResponse();
+
+            string userguid = Request.Headers["UserToken"];
+            string decyrptstring = Security.DecryptString(userguid);
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
+
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            Poll poll = _dBContext.Poll.Where(x => x.CreatedBy == user.Userid && x.PollId == pollId).FirstOrDefault();
+
+            if (poll == null) return BadRequest(Messages.PollNotFoundError);
+
+            poll.StatusId = 3;
+
+            int result = _dBContext.SaveChanges();
+
+            if (result > 0)
+            {
+                response.Response = Messages.PollDeleteSuccess;
+            }
+            return Ok(response);
+        }
+
         //Mapper.CreateMap<Employee, User>(); //Creates the map and all fields are copied if properties are same   
 
         ////If properties are different we need to map fields of employee to that of user as below.

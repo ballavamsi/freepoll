@@ -28,7 +28,15 @@ namespace freepoll.Models
         public virtual DbSet<SurveyUserQuestionOptions> SurveyUserQuestionOptions { get; set; }
         public virtual DbSet<User> User { get; set; }
 
-      
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
+                optionsBuilder.UseMySQL("server=remotemysql.com;port=3306;user=3wAtUqE7dU;password=eCaCI5QCuL;database=3wAtUqE7dU");
+            }
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<DataStarOptions>(entity =>

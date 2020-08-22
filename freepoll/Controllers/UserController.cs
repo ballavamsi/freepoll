@@ -69,8 +69,8 @@ namespace freepoll.Controllers
         //}
 
         [Route("login")]
-        [HttpGet]
-        public IActionResult UserLogin(LoginViewModel logindetails)
+        [HttpPost]
+        public IActionResult UserLogin([FromBody]LoginViewModel logindetails)
         {
             User user = new User();
             UserResponseViewModel userResponseViewModel = new UserResponseViewModel();
@@ -82,7 +82,7 @@ namespace freepoll.Controllers
                 user = new User();
                 user.Name = logindetails.name;
                 user.Email = logindetails.email;
-                //user.Password = newUser.password;
+                user.Password = string.Empty;
                 user.PhotoUrl = logindetails.platformdetail.platformImage;
                 user.Github = logindetails.platformdetail.platform == "github" ? logindetails.platformdetail.platformid : string.Empty;
                 user.Google = logindetails.platformdetail.platform == "google" ? logindetails.platformdetail.platformid : string.Empty;

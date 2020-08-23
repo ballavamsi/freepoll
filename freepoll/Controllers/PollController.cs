@@ -13,6 +13,7 @@ using System.Dynamic;
 using freepoll.Common;
 using static freepoll.Common.ResponseMessages;
 using Microsoft.Extensions.Primitives;
+using System.Text.RegularExpressions;
 
 namespace freepoll.Controllers
 {
@@ -160,6 +161,8 @@ namespace freepoll.Controllers
                 lstResponse.Add(new PollVoteOptionResponseViewModel() { label = item.OptionText, count = _count });
             }
 
+            lstResponse = lstResponse.OrderBy(x => x.count).ToList();
+
             List<PollVoteOptionResponseViewModel> lstRegion = new List<PollVoteOptionResponseViewModel>();
             foreach (var item in votes.GroupBy(x => x.UserLocation).ToList())
             {
@@ -185,7 +188,7 @@ namespace freepoll.Controllers
 
             string userguid = Request.Headers[Constants.UserToken];
 
-            List<UserPoll> userpollslist = new List<UserPoll>();
+            List<UserPoll> filteredUserPollsList = new List<UserPoll>();
             UserPollResponse userpollres = new UserPollResponse();
 
             string decyrptstring = Security.Decrypt(userguid);
@@ -200,6 +203,7 @@ namespace freepoll.Controllers
 
             var listpoll = from poll in _dBContext.Poll
                            where poll.CreatedBy == user.Userid && poll.StatusId != 3
+                           orderby poll.CreatedDate descending
                            select new UserPoll()
                            {
                                pollId = poll.PollId,
@@ -210,17 +214,29 @@ namespace freepoll.Controllers
                                votes = 0
                            };
 
-           
-            userpollslist = listpoll.ToList().Skip(pagesize * pagenum)
+            List<UserPoll> totalUserPolls = listpoll.ToList();
+
+            filteredUserPollsList = totalUserPolls.Skip(pagesize * pagenum)
                              .Take(pagesize).ToList();
 
+            List<int> pollIdsFilteredList = filteredUserPollsList.Select(x => x.pollId).ToList();
+
+            List<PollVotes> pollVotes = (from eachPoll in _dBContext.PollVotes
+                                        where pollIdsFilteredList.Contains(eachPoll.PollId)
+                                        select eachPoll).ToList();
+
+            var pollVotesReceived = (from eachPoll in pollVotes
+                                    group new { eachPoll.PollId } by new { eachPoll.CreatedDate, eachPoll.PollId } into eachGroup
+                                    select eachGroup).ToList();
+
             //Update only finaly display values
-            for (int i = 0; i < userpollslist.Count(); i++)
+            for (int i = 0; i < filteredUserPollsList.Count(); i++)
             {
-                userpollslist[i].status = statuses.Where(x => x.Statusid.ToString() == userpollslist[i].status).SingleOrDefault().Statusname;
+                filteredUserPollsList[i].status = statuses.Where(x => x.Statusid.ToString() == filteredUserPollsList[i].status).SingleOrDefault().Statusname;
+                filteredUserPollsList[i].votes = pollVotesReceived.Where(x => x.Key.PollId == filteredUserPollsList[i].pollId).Count();
             }
 
-            userpollres.userPolls = userpollslist;
+            userpollres.userPolls = filteredUserPollsList;
             userpollres.totalPolls = listpoll.ToList().Count;
 
             return Ok(userpollres);

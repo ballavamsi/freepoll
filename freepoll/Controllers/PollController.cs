@@ -41,9 +41,7 @@ namespace freepoll.Controllers
             string decyrptstring = Security.Decrypt(userId);
             if (decyrptstring == null) return BadRequest();
 
-            int decrpteduser = Convert.ToInt32(decyrptstring);
-
-            User user = _dBContext.User.Where(x => x.Userid == decrpteduser).FirstOrDefault();
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
 
             if (user == null) return BadRequest(Messages.UserNotFoundError);
 
@@ -52,7 +50,7 @@ namespace freepoll.Controllers
             p.StatusId = newPoll.status;
             p.Enddate = Convert.ToDateTime(newPoll.endDate);
             p.CreatedDate = DateTime.UtcNow;
-            p.CreatedBy = decrpteduser;
+            p.CreatedBy = user.Userid;
             p.Type = Int16.Parse(newPoll.type);
             p.Duplicate = Int16.Parse(newPoll.duplicate);
             p.PollGuid = ShortUrl.GenerateShortUrl();

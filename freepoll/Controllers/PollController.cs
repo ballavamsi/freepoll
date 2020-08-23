@@ -37,7 +37,7 @@ namespace freepoll.Controllers
         {
             //     int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
 
-            string userId = Request.Headers["userid"];
+            string userId = Request.Headers[Constants.UserToken];
             string decyrptstring = Security.Decrypt(userId);
             if (decyrptstring == null) return BadRequest();
 
@@ -185,7 +185,7 @@ namespace freepoll.Controllers
         public IActionResult UserPoll(int pagenum, int pagesize)
         {
 
-            string userguid = Request.Headers["UserToken"];
+            string userguid = Request.Headers[Constants.UserToken];
 
             List<UserPoll> userpollslist = new List<UserPoll>();
             UserPollResponse userpollres = new UserPollResponse();
@@ -233,7 +233,7 @@ namespace freepoll.Controllers
         {
             UserPollResponse response = new UserPollResponse();
 
-            string userguid = Request.Headers["UserToken"];
+            string userguid = Request.Headers[Constants.UserToken];
             string decyrptstring = Security.Decrypt(userguid);
             if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
 

@@ -210,13 +210,15 @@ namespace freepoll.Controllers
                                votes = 0
                            };
 
-            foreach (var item in listpoll)
-            {
-                item.status = statuses.Where(x => x.Statusid.ToString() == item.status).SingleOrDefault().Statusname;
-            }
-
+           
             userpollslist = listpoll.ToList().Skip(pagesize * pagenum)
                              .Take(pagesize).ToList();
+
+            //Update only finaly display values
+            for (int i = 0; i < userpollslist.Count(); i++)
+            {
+                userpollslist[i].status = statuses.Where(x => x.Statusid.ToString() == userpollslist[i].status).SingleOrDefault().Statusname;
+            }
 
             userpollres.userPolls = userpollslist;
             userpollres.totalPolls = listpoll.ToList().Count;

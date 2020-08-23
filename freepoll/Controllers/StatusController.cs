@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using freepoll.Common;
 using freepoll.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -62,6 +63,22 @@ namespace freepoll.Controllers
                 return Ok(ex.Message);
             }
 
+        }
+
+        [Route("encrypttest")]
+        [HttpGet]
+        public IActionResult TestEncrypt(string abc)
+        {
+            string temp1 = Security.Encrypt(abc);
+            return Ok(temp1);
+        }
+
+        [Route("decrypttest")]
+        [HttpGet]
+        public IActionResult TestDecrypt(string abc)
+        {
+            string temp2 = Security.Decrypt(abc);
+            return Ok(temp2);
         }
     }
 }

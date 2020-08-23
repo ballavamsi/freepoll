@@ -126,7 +126,7 @@ namespace freepoll.Controllers
                 userResponseViewModel.profileUrl = user.PhotoUrl;
                 userResponseViewModel.userName = user.Name;
                 userResponseViewModel.userEmail = user.Email;             
-                string encryptedString = Security.EncryptString(user.UserGuid);
+                string encryptedString = Security.Encrypt(user.UserGuid);
                 userResponseViewModel.UserGuid = encryptedString;
 
             }

@@ -12,6 +12,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Dynamic;
 using freepoll.Common;
 using static freepoll.Common.ResponseMessages;
+using Microsoft.Extensions.Primitives;
 
 namespace freepoll.Controllers
 {
@@ -29,6 +30,7 @@ namespace freepoll.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
 
+
         [Route("add")]
         [HttpPut]
         public IActionResult AddNewPoll([FromBody]NewPollViewModel newPoll)
@@ -36,7 +38,7 @@ namespace freepoll.Controllers
             //     int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
 
             string userId = Request.Headers["userid"];
-            string decyrptstring = Security.DecryptString(userId);
+            string decyrptstring = Security.Decrypt(userId);
             if (decyrptstring == null) return BadRequest();
 
             int decrpteduser = Convert.ToInt32(decyrptstring);
@@ -188,7 +190,7 @@ namespace freepoll.Controllers
             List<UserPoll> userpollslist = new List<UserPoll>();
             UserPollResponse userpollres = new UserPollResponse();
 
-            string decyrptstring = Security.DecryptString(userguid);
+            string decyrptstring = Security.Decrypt(userguid);
 
             if (string.IsNullOrEmpty(decyrptstring)) return BadRequest("Unauthorized User");
 
@@ -232,7 +234,7 @@ namespace freepoll.Controllers
             UserPollResponse response = new UserPollResponse();
 
             string userguid = Request.Headers["UserToken"];
-            string decyrptstring = Security.DecryptString(userguid);
+            string decyrptstring = Security.Decrypt(userguid);
             if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
 
             User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();

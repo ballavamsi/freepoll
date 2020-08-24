@@ -35,19 +35,19 @@ namespace freepoll.ViewModels
     public class UserPoll
     {
         public int pollId { get; set; }
-        public string pollguid { get; set; }
+        public string pollGuid { get; set; }
         public string status { get; set; }
         public DateTime date { get; set; }
 
-        public string Votes { get; set; }
+        public int votes { get; set; }
 
-        public string pollname { get; set; }
+        public string pollName { get; set; }
     }
 
     public class UserPollResponse
     {
         public List<UserPoll> userPolls { get; set; }
-        public int userpollscount { get; set; }
+        public int totalPolls { get; set; }
 
         public string Response { get; set; }
     }

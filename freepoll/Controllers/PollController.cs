@@ -12,6 +12,8 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Dynamic;
 using freepoll.Common;
 using static freepoll.Common.ResponseMessages;
+using Microsoft.Extensions.Primitives;
+using System.Text.RegularExpressions;
 
 namespace freepoll.Controllers
 {
@@ -29,19 +31,18 @@ namespace freepoll.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
 
+
         [Route("add")]
         [HttpPut]
         public IActionResult AddNewPoll([FromBody]NewPollViewModel newPoll)
         {
             //     int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
 
-            string userId = Request.Headers["userid"];
-            string decyrptstring = Security.DecryptString(userId);
+            string userId = Request.Headers[Constants.UserToken];
+            string decyrptstring = Security.Decrypt(userId);
             if (decyrptstring == null) return BadRequest();
 
-            int decrpteduser = Convert.ToInt32(decyrptstring);
-
-            User user = _dBContext.User.Where(x => x.Userid == decrpteduser).FirstOrDefault();
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
 
             if (user == null) return BadRequest(Messages.UserNotFoundError);
 
@@ -50,7 +51,7 @@ namespace freepoll.Controllers
             p.StatusId = newPoll.status;
             p.Enddate = Convert.ToDateTime(newPoll.endDate);
             p.CreatedDate = DateTime.UtcNow;
-            p.CreatedBy = decrpteduser;
+            p.CreatedBy = user.Userid;
             p.Type = Int16.Parse(newPoll.type);
             p.Duplicate = Int16.Parse(newPoll.duplicate);
             p.PollGuid = ShortUrl.GenerateShortUrl();
@@ -160,6 +161,8 @@ namespace freepoll.Controllers
                 lstResponse.Add(new PollVoteOptionResponseViewModel() { label = item.OptionText, count = _count });
             }
 
+            lstResponse = lstResponse.OrderBy(x => x.count).ToList();
+
             List<PollVoteOptionResponseViewModel> lstRegion = new List<PollVoteOptionResponseViewModel>();
             foreach (var item in votes.GroupBy(x => x.UserLocation).ToList())
             {
@@ -174,6 +177,99 @@ namespace freepoll.Controllers
             };
 
             return Ok(dynamicData);
+        }
+
+
+
+        [Route("user/pagenumber/{pagenum}/pagesize/{pagesize}")]
+        [HttpGet]
+        public IActionResult UserPoll(int pagenum, int pagesize)
+        {
+
+            string userguid = Request.Headers[Constants.UserToken];
+
+            List<UserPoll> filteredUserPollsList = new List<UserPoll>();
+            UserPollResponse userpollres = new UserPollResponse();
+
+            string decyrptstring = Security.Decrypt(userguid);
+
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest("Unauthorized User");
+
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            List<Status> statuses = _dBContext.Status.ToList();
+
+            var listpoll = from poll in _dBContext.Poll
+                           where poll.CreatedBy == user.Userid && poll.StatusId != 3
+                           orderby poll.CreatedDate descending
+                           select new UserPoll()
+                           {
+                               pollId = poll.PollId,
+                               pollGuid = poll.PollGuid,
+                               date = poll.CreatedDate,
+                               pollName = poll.Name,
+                               status = poll.StatusId.ToString(),
+                               votes = 0
+                           };
+
+            List<UserPoll> totalUserPolls = listpoll.ToList();
+
+            filteredUserPollsList = totalUserPolls.Skip(pagesize * pagenum)
+                             .Take(pagesize).ToList();
+
+            List<int> pollIdsFilteredList = filteredUserPollsList.Select(x => x.pollId).ToList();
+
+            List<PollVotes> pollVotes = (from eachPoll in _dBContext.PollVotes
+                                        where pollIdsFilteredList.Contains(eachPoll.PollId)
+                                        select eachPoll).ToList();
+
+            var pollVotesReceived = (from eachPoll in pollVotes
+                                    group new { eachPoll.PollId } by new { eachPoll.CreatedDate, eachPoll.PollId } into eachGroup
+                                    select eachGroup).ToList();
+
+            //Update only finaly display values
+            for (int i = 0; i < filteredUserPollsList.Count(); i++)
+            {
+                filteredUserPollsList[i].status = statuses.Where(x => x.Statusid.ToString() == filteredUserPollsList[i].status).SingleOrDefault().Statusname;
+                filteredUserPollsList[i].votes = pollVotesReceived.Where(x => x.Key.PollId == filteredUserPollsList[i].pollId).Count();
+            }
+
+            userpollres.userPolls = filteredUserPollsList;
+            userpollres.totalPolls = listpoll.ToList().Count;
+
+            return Ok(userpollres);
+        }
+
+
+        [Route("delete/{pollId}")]
+        [HttpDelete]
+        public IActionResult UserPollDelete(int pollId)
+        {
+            UserPollResponse response = new UserPollResponse();
+
+            string userguid = Request.Headers[Constants.UserToken];
+            string decyrptstring = Security.Decrypt(userguid);
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
+
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            Poll poll = _dBContext.Poll.Where(x => x.CreatedBy == user.Userid && x.PollId == pollId).FirstOrDefault();
+
+            if (poll == null) return BadRequest(Messages.PollNotFoundError);
+
+            poll.StatusId = 3;
+
+            int result = _dBContext.SaveChanges();
+
+            if (result > 0)
+            {
+                response.Response = Messages.PollDeleteSuccess;
+            }
+            return Ok(response);
         }
 
         //Mapper.CreateMap<Employee, User>(); //Creates the map and all fields are copied if properties are same   

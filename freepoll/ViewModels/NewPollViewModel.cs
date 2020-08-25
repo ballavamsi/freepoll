@@ -1,3 +1,4 @@
+using freepoll.Helpers;
 using System;
 using System.Collections.Generic;
 
@@ -12,5 +13,7 @@ namespace freepoll.ViewModels
         public DateTime endDate {get;set;}
 
         public int status { get; set; }
+
+        public string pollGuid { get; set; } = ShortUrl.GenerateShortUrl();
     }
 }

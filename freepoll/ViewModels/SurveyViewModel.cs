@@ -1,4 +1,5 @@
-﻿using System;
+﻿using freepoll.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,7 +21,7 @@ namespace freepoll.ViewModels
         public int Askemail { get; set; }
 
         public int Enableprevious { get; set; }
-        public string SurveyGuid { get; set; }
+        public string SurveyGuid { get; set; } = ShortUrl.GenerateShortUrl();
         public List<SurveyQuestionsViewModel> SurveyQuestions { get; set; }
     }
 }

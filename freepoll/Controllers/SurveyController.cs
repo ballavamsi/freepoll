@@ -31,19 +31,25 @@ namespace freepoll.Controllers
         public IActionResult AddNewSurvey([FromBody] SurveyViewModel newSurvey)
         {
             int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
-            Survey s = new Survey();
-            s.Welcometitle = newSurvey.Welcometitle;
-            s.Welcomedescription = newSurvey.WelcomeDescription;
-            s.Welcomeimage = newSurvey.Welcomeimage;
-            s.Endtitle = newSurvey.Endtitle;
+            
+            Survey s = _mapper.Map<Survey>(newSurvey);
             s.StatusId = PublishedStatusId;
-            s.CreatedBy = Resources.SystemUser;
             s.CreatedDate = DateTime.UtcNow;
-            s.Allowduplicate = newSurvey.Allowduplicate;
-            s.Emailidrequired = newSurvey.Emailidrequired;
-            s.Askemail = newSurvey.Askemail;
-            s.Enableprevious = newSurvey.Enableprevious;
-            s.SurveyGuid = ShortUrl.GenerateShortUrl();
+
+
+            // new Survey();
+            //s.Welcometitle = newSurvey.Welcometitle;
+            //s.Welcomedescription = newSurvey.WelcomeDescription;
+            //s.Welcomeimage = newSurvey.Welcomeimage;
+            //s.Endtitle = newSurvey.Endtitle;
+            //s.StatusId = PublishedStatusId;
+            //s.CreatedBy = Resources.SystemUser;
+            //s.CreatedDate = DateTime.UtcNow;
+            //s.Allowduplicate = newSurvey.Allowduplicate;
+            //s.Emailidrequired = newSurvey.Emailidrequired;
+            //s.Askemail = newSurvey.Askemail;
+            //s.Enableprevious = newSurvey.Enableprevious;
+            //s.SurveyGuid = ShortUrl.GenerateShortUrl();
 
             _dBContext.Survey.Add(s);
             _dBContext.SaveChanges();
@@ -52,16 +58,11 @@ namespace freepoll.Controllers
             int qcount = 0;
             foreach (var item in newSurvey.SurveyQuestions)
             {
-                SurveyQuestions question = new SurveyQuestions();
+                SurveyQuestions question = _mapper.Map<SurveyQuestions>(item);
                 question.SurveyId = s.Surveyid;
-                question.Title = item.Title;
-                question.CreatedBy = Resources.SystemUser;
+                question.CreatedBy = Convert.ToInt32(s.CreatedBy);
                 question.CreatedDate = DateTime.UtcNow;
                 question.QuestionDisplayOrder = qcount;
-                question.TypeId = item.TypeId;
-                question.Isrequired = item.Isrequired;
-                question.StatusId = item.StatusId;
-                qlist.Add(question);
                 qcount++;
             }
 
@@ -82,7 +83,7 @@ namespace freepoll.Controllers
                         qop.SurveyQuestionId = qid;
                         qop.OptionKey = item.Key;
                         qop.OptionValue = Convert.ToString(item.Value);
-                        qop.CreatedBy = Resources.SystemUser;
+                        qop.CreatedBy = Convert.ToInt32(s.CreatedBy);
                         qop.CreatedDate = DateTime.UtcNow;
                         qoplist.Add(qop);
                     }
@@ -106,15 +107,7 @@ namespace freepoll.Controllers
             if (sur == null)
                 return BadRequest(Messages.SurveyNotFoundError);
 
-            surview.SurveyId = sur.Surveyid;
-            surview.Welcometitle = sur.Welcometitle;
-            surview.WelcomeDescription = sur.Welcomedescription;
-            surview.Emailidrequired = sur.Emailidrequired;
-            surview.Askemail = sur.Askemail;
-            surview.Enableprevious = sur.Enableprevious;
-            surview.Endtitle = sur.Endtitle;
-            surview.Welcomeimage = sur.Welcomeimage;
-            surview.SurveyGuid = sur.SurveyGuid;
+            surview = _mapper.Map<SurveyViewModel>(sur);
 
             List<SurveyQuestions> questions = _dBContext.SurveyQuestions.Where(x => x.SurveyId == id).ToList();
 
@@ -122,12 +115,7 @@ namespace freepoll.Controllers
 
             foreach (var item in questions)
             {
-                SurveyQuestionsViewModel viewquestion = new SurveyQuestionsViewModel();
-                viewquestion.SurveyQuestionId = item.SurveyQuestionId;
-                viewquestion.QuestionDisplayOrder = item.QuestionDisplayOrder;
-                viewquestion.TypeId = item.TypeId;
-                viewquestion.Title = item.Title;
-                viewquestion.Subtitle = item.Subtitle;
+                SurveyQuestionsViewModel viewquestion = _mapper.Map<SurveyQuestionsViewModel>(item);
                 List<SurveyQuestionOptions> options = new List<SurveyQuestionOptions>();
                 options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).OrderBy(x=> x.OptionKey).ToList();
                 Dictionary<string, object> dict = new Dictionary<string, object>();

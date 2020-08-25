@@ -15,5 +15,11 @@ public class AutoMapping : Profile
             .ForMember(dest => dest.Duplicate, opts => opts.MapFrom(src => Convert.ToInt16(src.duplicate)))
             .ForMember(dest => dest.Enddate, opts => opts.MapFrom(src => Convert.ToDateTime(src.endDate)))
             .ForMember(dest => dest.PollGuid, opts => opts.MapFrom(src => src.pollGuid));
+
+        CreateMap<NewPollViewModel, Survey>()
+            .ForMember(dest => dest.StatusId, opts => opts.MapFrom(src => src.status));
+
+        CreateMap<SurveyQuestionsViewModel, SurveyQuestions>();
+
     }
 }

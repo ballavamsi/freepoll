@@ -20,6 +20,10 @@ public class AutoMapping : Profile
             .ForMember(dest => dest.StatusId, opts => opts.MapFrom(src => src.status));
 
         CreateMap<SurveyQuestionsViewModel, SurveyQuestions>();
+        CreateMap<SurveyQuestions, SurveyQuestionsViewModel>();
+
+        CreateMap<SurveyViewModel, Survey>();
+        CreateMap<Survey, SurveyViewModel>();
 
     }
 }

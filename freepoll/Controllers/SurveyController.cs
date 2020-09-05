@@ -63,6 +63,7 @@ namespace freepoll.Controllers
                 question.CreatedBy = Convert.ToInt32(s.CreatedBy);
                 question.CreatedDate = DateTime.UtcNow;
                 question.QuestionDisplayOrder = qcount;
+                qlist.Add(question);
                 qcount++;
             }
 

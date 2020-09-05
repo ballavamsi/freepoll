@@ -314,5 +314,101 @@ namespace freepoll.Controllers
         {
             return Ok(_dBContext.DataStarOptions.Where(x => x.IsActive == 1).OrderBy(x => x.DisplayOrder).ToList());
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pagenum"></param>
+        /// <param name="pagesize"></param>
+        /// <returns></returns>
+        [Route("user/pagenumber/{pagenum}/pagesize/{pagesize}")]
+        [HttpGet]
+        public IActionResult UserSurvey(int pagenum, int pagesize)
+        {
+            string userguid = Request.Headers[Constants.UserToken];
+
+            List<UserSurvey> filteredUserSurveysList = new List<UserSurvey>();
+            UserSurveyResponse usersurveyres = new UserSurveyResponse();
+
+            string decyrptstring = Security.Decrypt(userguid);
+
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest("Unauthorized User");
+
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            List<Status> statuses = _dBContext.Status.ToList();
+
+            var listSurveys = from survey in _dBContext.Survey
+                              where survey.CreatedBy == user.Userid && survey.StatusId != 3
+                              orderby survey.CreatedBy descending
+                              select new UserSurvey()
+                              {
+                                  surveyId = survey.Surveyid,
+                                  surveyGuid = survey.SurveyGuid,
+                                  date = survey.CreatedDate,
+                                  surveyName = survey.Welcometitle,
+                                  status = survey.StatusId.ToString(),
+                                  feedbacks = 0
+                              };
+
+            List<UserSurvey> totalUserSurveys = listSurveys.ToList();
+            filteredUserSurveysList = totalUserSurveys.Skip(pagesize * pagenum)
+                             .Take(pagesize).ToList();
+
+            List<int> pollIdsFilteredList = filteredUserSurveysList.Select(x => x.surveyId).ToList();
+
+            List<SurveyUser> surveyUsers = (from eachSurvey in _dBContext.SurveyUser
+                                         where pollIdsFilteredList.Contains(eachSurvey.SurveyId)
+                                         select eachSurvey).ToList();
+
+            var surveyFeedbacksReceived = (from eachSurvey in surveyUsers
+                                           group new { eachSurvey.SurveyId } by new { eachSurvey.CompletedDatetime , eachSurvey.SurveyId } into eachGroup
+                                           select eachGroup).ToList();
+
+            //Update only finaly display values
+            for (int i = 0; i < filteredUserSurveysList.Count(); i++)
+            {
+                filteredUserSurveysList[i].status = statuses.Where(x => x.Statusid.ToString() == filteredUserSurveysList[i].status).SingleOrDefault().Statusname;
+                filteredUserSurveysList[i].feedbacks = surveyFeedbacksReceived.Where(x => x.Key.SurveyId == filteredUserSurveysList[i].surveyId).Count();
+            }
+
+            usersurveyres.userSurveys = filteredUserSurveysList;
+            usersurveyres.totalSurveys = listSurveys.ToList().Count;
+
+            return Ok(usersurveyres);
+        }
+
+
+        [Route("delete/{surveyId}")]
+        [HttpDelete]
+        public IActionResult UserSurveyDelete(int surveyId)
+        {
+            UserSurveyResponse response = new UserSurveyResponse();
+
+            string userguid = Request.Headers[Constants.UserToken];
+            string decyrptstring = Security.Decrypt(userguid);
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
+
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyId).FirstOrDefault();
+
+            if (survey == null) return BadRequest(Messages.PollNotFoundError);
+
+            survey.StatusId = 3;
+
+            int result = _dBContext.SaveChanges();
+
+            if (result > 0)
+            {
+                response.Response = Messages.PollDeleteSuccess;
+            }
+            return Ok(response);
+        }
+
     }
 }

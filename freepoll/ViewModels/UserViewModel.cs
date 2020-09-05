@@ -51,4 +51,25 @@ namespace freepoll.ViewModels
 
         public string Response { get; set; }
     }
+
+
+    public class UserSurvey
+    {
+        public int surveyId { get; set; }
+        public string surveyGuid { get; set; }
+        public string status { get; set; }
+        public DateTime date { get; set; }
+
+        public int feedbacks { get; set; }
+
+        public string surveyName { get; set; }
+    }
+
+    public class UserSurveyResponse
+    {
+        public List<UserSurvey> userSurveys { get; set; }
+        public int totalSurveys { get; set; }
+
+        public string Response { get; set; }
+    }
 }

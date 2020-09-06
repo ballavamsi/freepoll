@@ -30,26 +30,20 @@ namespace freepoll.Controllers
         [HttpPut]
         public IActionResult AddNewSurvey([FromBody] SurveyViewModel newSurvey)
         {
+            string userId = Request.Headers[Constants.UserToken];
+            string decyrptstring = Security.Decrypt(userId);
+            if (decyrptstring == null) return BadRequest();
+
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
             int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
             
             Survey s = _mapper.Map<Survey>(newSurvey);
             s.StatusId = PublishedStatusId;
             s.CreatedDate = DateTime.UtcNow;
-
-
-            // new Survey();
-            //s.Welcometitle = newSurvey.Welcometitle;
-            //s.Welcomedescription = newSurvey.WelcomeDescription;
-            //s.Welcomeimage = newSurvey.Welcomeimage;
-            //s.Endtitle = newSurvey.Endtitle;
-            //s.StatusId = PublishedStatusId;
-            //s.CreatedBy = Resources.SystemUser;
-            //s.CreatedDate = DateTime.UtcNow;
-            //s.Allowduplicate = newSurvey.Allowduplicate;
-            //s.Emailidrequired = newSurvey.Emailidrequired;
-            //s.Askemail = newSurvey.Askemail;
-            //s.Enableprevious = newSurvey.Enableprevious;
-            //s.SurveyGuid = ShortUrl.GenerateShortUrl();
+            s.CreatedBy = user.Userid;
 
             _dBContext.Survey.Add(s);
             _dBContext.SaveChanges();

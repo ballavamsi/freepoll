@@ -36,8 +36,6 @@ namespace freepoll.Controllers
         [HttpPut]
         public IActionResult AddNewPoll([FromBody]NewPollViewModel newPoll)
         {
-            //     int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
-
             string userId = Request.Headers[Constants.UserToken];
             string decyrptstring = Security.Decrypt(userId);
             if (decyrptstring == null) return BadRequest();

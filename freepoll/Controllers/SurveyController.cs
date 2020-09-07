@@ -56,6 +56,7 @@ namespace freepoll.Controllers
                 question.SurveyId = s.Surveyid;
                 question.CreatedBy = Convert.ToInt32(s.CreatedBy);
                 question.CreatedDate = DateTime.UtcNow;
+                question.StatusId = PublishedStatusId;
                 question.QuestionDisplayOrder = qcount;
                 qlist.Add(question);
                 qcount++;
@@ -237,7 +238,7 @@ namespace freepoll.Controllers
             List<QuestionType> lstQuestionTypes = _dBContext.QuestionType.ToList();
             List<SurveyUserQuestionOptions> lstSurveyUserQuestionOptions = new List<SurveyUserQuestionOptions>();
 
-            for (int i = 0; i < questions.Count-1; i++)
+            for (int i = 0; i < questions.Count; i++)
             {
                 SurveyUserQuestionOptions surveyUserQuestionOption = new SurveyUserQuestionOptions();
                 surveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
@@ -256,6 +257,9 @@ namespace freepoll.Controllers
                     case "radiobuttons":
                         surveyUserQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
                         break;
+                    case "imageradiobuttons":
+                        surveyUserQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
+                        break;
                     case "multiple":
                         foreach (var item in requestViewModel.selected)
                         {
@@ -267,6 +271,39 @@ namespace freepoll.Controllers
                             lstSurveyUserQuestionOptions.Add(tempSurveyUserQuestionOption);
                         }
                         addToList = false;
+                        break;
+                    case "imagemultiple":
+                        foreach (var item in requestViewModel.selected)
+                        {
+                            SurveyUserQuestionOptions tempSurveyUserQuestionOption = new SurveyUserQuestionOptions();
+                            tempSurveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
+                            tempSurveyUserQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
+                            tempSurveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
+                            tempSurveyUserQuestionOption.SurveyQuestionOptionId = item;
+                            lstSurveyUserQuestionOptions.Add(tempSurveyUserQuestionOption);
+                        }
+                        addToList = false;
+                        break;
+                    case "slider":
+                        surveyUserQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
+                        break;
+                    case "rangeslider":
+                        int j = 0;
+                        foreach (var item in requestViewModel.selected)
+                        {
+                            SurveyUserQuestionOptions tempSurveyUserQuestionOption = new SurveyUserQuestionOptions();
+                            tempSurveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
+                            tempSurveyUserQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
+                            tempSurveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
+                            tempSurveyUserQuestionOption.SurveyQuestionOptionId = item;
+                            tempSurveyUserQuestionOption.CustomAnswer = j == 0 ? "min" : "max";
+                            lstSurveyUserQuestionOptions.Add(tempSurveyUserQuestionOption);
+                            j++;
+                        }
+                        addToList = false;
+                        break;
+                    case "starrating":
+                        surveyUserQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
                         break;
                     default:
                         surveyUserQuestionOption.CustomAnswer = requestViewModel.text; 
@@ -404,6 +441,71 @@ namespace freepoll.Controllers
             }
             return Ok(response);
         }
+
+        [Route("user/reports/{surveyId}")]
+        [HttpGet]
+        public IActionResult UserSurveyReports(int surveyId)
+        {
+            UserSurveyResponse response = new UserSurveyResponse();
+            SurveyMetrics metric = new SurveyMetrics(_dBContext, _mapper);
+            //string userguid = Request.Headers[Constants.UserToken];
+            string decyrptstring = "a64afc20-d22d-4e99-8f60-c04211e486c2";// Security.Decrypt(userguid);
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
+
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyId).FirstOrDefault();
+
+            if (survey == null) return BadRequest(Messages.PollNotFoundError);
+
+            SurveyViewModel surveyViewModel = (SurveyViewModel)((OkObjectResult)GetSurvey(survey.Surveyid)).Value;
+
+            List<QuestionType> questionType = _dBContext.QuestionType.ToList();
+
+            SurveyMetric surveyMetric = new SurveyMetric();
+            List<QuestionMetric> questionMetrics = new List<QuestionMetric>();
+            foreach (var item in surveyViewModel.SurveyQuestions)
+            {
+                QuestionMetric questionMetric = new QuestionMetric();
+                var type = questionType.Where(x => x.TypeId == item.TypeId).Select(x => x.TypeCode).FirstOrDefault();
+                switch (type)
+                {
+                    case "radiobuttons":
+                        questionMetric = metric.forCountAndAverage(item.SurveyQuestionId);
+                        break;
+                    case "multiple":
+                        questionMetric = metric.forCountAndAverage(item.SurveyQuestionId);
+                        break;
+                    case "imageradiobuttons":
+                        questionMetric = metric.forCountAndAverage(item.SurveyQuestionId);
+                        break;
+                    case "imagemultiple":
+                        questionMetric = metric.forCountAndAverage(item.SurveyQuestionId);
+                        break;
+                    case "slider":
+                        questionMetric = metric.forSliderAverage(item.SurveyQuestionId);
+                        break;
+                    case "rangeslider":
+                        questionMetric = metric.forSliderAverage(item.SurveyQuestionId);
+                        break;
+                    case "starrating":
+                        questionMetric = metric.forStarRatingAverage(item.SurveyQuestionId);
+                        break;
+                    default:
+                        break;
+                }
+                questionMetrics.Add(questionMetric);
+            }
+
+            surveyMetric.Title = survey.Welcometitle;
+            surveyMetric.Description = survey.Welcomedescription;
+            surveyMetric.logo = survey.Welcomeimage;
+            surveyMetric.Questions = questionMetrics;
+            return Ok(surveyMetric);
+        }
+
 
     }
 }

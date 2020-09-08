@@ -44,6 +44,7 @@ namespace freepoll.Controllers
             s.StatusId = PublishedStatusId;
             s.CreatedDate = DateTime.UtcNow;
             s.CreatedBy = user.Userid;
+            s.Enddate = DateTime.UtcNow.AddYears(1);
 
             _dBContext.Survey.Add(s);
             _dBContext.SaveChanges();
@@ -149,7 +150,7 @@ namespace freepoll.Controllers
                 surv.Welcomeimage = sur.Welcomeimage;
                 surv.SurveyGuid = sur.SurveyGuid;
 
-                List<SurveyQuestions> questions = _dBContext.SurveyQuestions.Where(x => x.SurveyId == sur.Surveyid).ToList();
+                List<SurveyQuestions> questions = _dBContext.SurveyQuestions.OrderBy(x=>x.QuestionDisplayOrder).Where(x => x.SurveyId == sur.Surveyid).ToList();
 
                 List<SurveyQuestionsViewModel> viewquestions = new List<SurveyQuestionsViewModel>();
 
@@ -246,9 +247,11 @@ namespace freepoll.Controllers
                 surveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
 
                 QuestionAnswersViewModel requestViewModel = jObject.Where(x=> x.key == questions[i].SurveyQuestionId.ToString()).FirstOrDefault();
-
+                List<SurveyQuestionOptions> surveyQuestionOptions = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == surveyUserQuestionOption.SurveyQuestionId).OrderBy(x=>x.OptionKey).ToList();
                 var questionTypeCode = lstQuestionTypes.Where(x => x.TypeId == questions[i].TypeId).FirstOrDefault().TypeCode;
                 bool addToList = true;
+                int tempNumber = 0;
+
                 switch (questionTypeCode)
                 {
                     case "essay":
@@ -304,6 +307,36 @@ namespace freepoll.Controllers
                         break;
                     case "starrating":
                         surveyUserQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
+                        break;
+                    case "multiplerating":
+                        foreach (var item in requestViewModel.selected)
+                        {
+                            SurveyUserQuestionOptions tempSurveyUserQuestionOption = new SurveyUserQuestionOptions();
+                            tempSurveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
+                            tempSurveyUserQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
+                            tempSurveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
+                            tempSurveyUserQuestionOption.SurveyQuestionOptionId = surveyQuestionOptions[tempNumber].SurveyQuestionOptionId.ToString();
+                            tempSurveyUserQuestionOption.CustomAnswer = item;
+                            lstSurveyUserQuestionOptions.Add(tempSurveyUserQuestionOption);
+                            tempNumber++;
+                        }
+                        addToList = false;
+                        break;
+                    case "customrating":
+
+                        var surveyQuestionOptionsValues = surveyQuestionOptions.Where(x => x.OptionKey.StartsWith("value")).OrderBy(x => x.OptionKey).ToList();
+                        foreach (var item in requestViewModel.selected)
+                        {
+                            SurveyUserQuestionOptions tempSurveyUserQuestionOption = new SurveyUserQuestionOptions();
+                            tempSurveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
+                            tempSurveyUserQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
+                            tempSurveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
+                            tempSurveyUserQuestionOption.SurveyQuestionOptionId = surveyQuestionOptionsValues[tempNumber].SurveyQuestionOptionId.ToString();
+                            tempSurveyUserQuestionOption.CustomAnswer = item;
+                            lstSurveyUserQuestionOptions.Add(tempSurveyUserQuestionOption);
+                            tempNumber++;
+                        }
+                        addToList = false;
                         break;
                     default:
                         surveyUserQuestionOption.CustomAnswer = requestViewModel.text; 
@@ -374,7 +407,7 @@ namespace freepoll.Controllers
 
             var listSurveys = from survey in _dBContext.Survey
                               where survey.CreatedBy == user.Userid && survey.StatusId != 3
-                              orderby survey.CreatedBy descending
+                              orderby survey.CreatedDate descending
                               select new UserSurvey()
                               {
                                   surveyId = survey.Surveyid,
@@ -446,7 +479,6 @@ namespace freepoll.Controllers
         [HttpGet]
         public IActionResult UserSurveyReports(int surveyId)
         {
-            UserSurveyResponse response = new UserSurveyResponse();
             SurveyMetrics metric = new SurveyMetrics(_dBContext, _mapper);
             //string userguid = Request.Headers[Constants.UserToken];
             string decyrptstring = "a64afc20-d22d-4e99-8f60-c04211e486c2";// Security.Decrypt(userguid);
@@ -492,6 +524,12 @@ namespace freepoll.Controllers
                         break;
                     case "starrating":
                         questionMetric = metric.forStarRatingAverage(item.SurveyQuestionId);
+                        break;
+                    case "multiplerating":
+                        questionMetric = metric.forCountAndAverage(item.SurveyQuestionId);
+                        break;
+                    case "customrating":
+                        questionMetric = metric.forCountAndAverage(item.SurveyQuestionId);
                         break;
                     default:
                         break;

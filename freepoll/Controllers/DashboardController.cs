@@ -63,7 +63,7 @@ namespace freepoll.Controllers
 
             List<int> surveyIds = surveys.Select(x => x.Surveyid).ToList();
             List<SurveyUser> surveyUsers = (from eachSurvey in _dBContext.SurveyUser
-                                            where surveyIds.Contains(eachSurvey.SurveyId)
+                                            where surveyIds.Contains(eachSurvey.SurveyId) && eachSurvey.CompletedDatetime != null
                                             select eachSurvey).ToList();
 
             //Update total Surveys Feedbacks

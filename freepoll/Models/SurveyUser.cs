@@ -11,5 +11,8 @@ namespace freepoll.Models
         public string SurveyUserGuid { get; set; }
         public DateTime? InsertedDatetime { get; set; }
         public DateTime? CompletedDatetime { get; set; }
+        public string ReviewComment { get; set; }
+        public int? ReviewCompleted { get; set; }
+        public DateTime? ReviewDatetime { get; set; }
     }
 }

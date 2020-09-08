@@ -27,7 +27,7 @@ namespace freepoll.Controllers
         }
 
         [Route("add")]
-        [HttpPut]
+        [HttpPost]
         public IActionResult AddNewSurvey([FromBody] SurveyViewModel newSurvey)
         {
             string userId = Request.Headers[Constants.UserToken];
@@ -462,7 +462,7 @@ namespace freepoll.Controllers
 
             Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyId).FirstOrDefault();
 
-            if (survey == null) return BadRequest(Messages.PollNotFoundError);
+            if (survey == null) return BadRequest(Messages.SurveyNotFoundError);
 
             survey.StatusId = 3;
 
@@ -475,13 +475,14 @@ namespace freepoll.Controllers
             return Ok(response);
         }
 
-        [Route("user/reports/{surveyId}")]
-        [HttpGet]
-        public IActionResult UserSurveyReports(int surveyId)
+
+        [Route("user/feedbacks/comment/{surveyId}")]
+        [HttpPut]
+        public IActionResult UpdateFeedbackComment(int surveyId, SurveyFeedbackViewModel surveyFeedbackViewModel)
         {
-            SurveyMetrics metric = new SurveyMetrics(_dBContext, _mapper);
-            //string userguid = Request.Headers[Constants.UserToken];
-            string decyrptstring = "a64afc20-d22d-4e99-8f60-c04211e486c2";// Security.Decrypt(userguid);
+            UserFeedbackResponse userFeedbackResponse = new UserFeedbackResponse();
+            string userguid = Request.Headers[Constants.UserToken];
+            string decyrptstring = Security.Decrypt(userguid);
             if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
 
             User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
@@ -490,17 +491,88 @@ namespace freepoll.Controllers
 
             Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyId).FirstOrDefault();
 
-            if (survey == null) return BadRequest(Messages.PollNotFoundError);
+            if (survey == null) return BadRequest(Messages.SurveyNotFoundError);
+
+            SurveyUser surveyUser = _dBContext.SurveyUser.Where(x => x.SurveyId == surveyId && x.SurveyUserId == surveyFeedbackViewModel.FeedbackId).FirstOrDefault();
+
+            if (surveyUser == null) return BadRequest(Messages.FeedbackNotFound);
+
+            surveyUser.ReviewComment = surveyFeedbackViewModel.Comment;
+            surveyUser.ReviewCompleted = Convert.ToBoolean(surveyFeedbackViewModel.reviewComplete) ? 1 : 0;
+            surveyUser.ReviewDatetime = DateTime.UtcNow;
+            _dBContext.SurveyUser.Update(surveyUser);
+            _dBContext.SaveChanges();
+            return Ok(surveyUser);
+        }
+
+        [Route("user/feedbacks/{surveyId}/pagenumber/{pagenum}/pagesize/{pagesize}")]
+        [HttpGet]
+        public IActionResult GetFeedbacks(int surveyId,int pagenum,int pagesize)
+        {
+            UserFeedbackResponse userFeedbackResponse = new UserFeedbackResponse();
+            string userguid = Request.Headers[Constants.UserToken];
+            string decyrptstring = Security.Decrypt(userguid);
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
+
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyId).FirstOrDefault();
+
+            if (survey == null) return BadRequest(Messages.SurveyNotFoundError);
+
+            var userFeedbacks = from fb in _dBContext.SurveyUser
+                                where fb.SurveyId == surveyId && fb.CompletedDatetime != null
+                                orderby fb.InsertedDatetime descending
+                                select new Feedbacks()
+                                {
+                                    surveyUserId = fb.SurveyUserId,
+                                    surveyUserGuid = fb.SurveyUserGuid,
+                                    EmailId = fb.SurveyUserEmail,
+                                    receivedDate = fb.CompletedDatetime,
+                                    Comment = fb.ReviewComment,
+                                    reviewComplete = Convert.ToBoolean(fb.ReviewCompleted),
+                                    reviewUpdatedDate = fb.ReviewDatetime 
+                                };
+
+            var total = userFeedbacks.Count();
+
+            var filteredFeedbacks = userFeedbacks.Skip(pagesize * pagenum)
+                            .Take(pagesize).ToList();
+
+            userFeedbackResponse.feedbacks = filteredFeedbacks;
+            userFeedbackResponse.total = total;
+
+            return Ok(userFeedbackResponse);
+        }
+
+        [Route("user/graphmetrics/{surveyId}")]
+        [HttpGet]
+        public IActionResult UserSurveyReports(int surveyId)
+        {
+            SurveyMetrics metric = new SurveyMetrics(_dBContext, _mapper);
+            string userguid = Request.Headers[Constants.UserToken];
+            string decyrptstring = Security.Decrypt(userguid);
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
+
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyId).FirstOrDefault();
+
+            if (survey == null) return BadRequest(Messages.SurveyNotFoundError);
 
             SurveyViewModel surveyViewModel = (SurveyViewModel)((OkObjectResult)GetSurvey(survey.Surveyid)).Value;
 
             List<QuestionType> questionType = _dBContext.QuestionType.ToList();
 
-            SurveyMetric surveyMetric = new SurveyMetric();
-            List<QuestionMetric> questionMetrics = new List<QuestionMetric>();
+            SurveyMetricViewModel surveyMetric = new SurveyMetricViewModel();
+            List<QuestionMetricViewModel> questionMetrics = new List<QuestionMetricViewModel>();
             foreach (var item in surveyViewModel.SurveyQuestions)
             {
-                QuestionMetric questionMetric = new QuestionMetric();
+                QuestionMetricViewModel questionMetric = new QuestionMetricViewModel();
                 var type = questionType.Where(x => x.TypeId == item.TypeId).Select(x => x.TypeCode).FirstOrDefault();
                 switch (type)
                 {
@@ -526,14 +598,15 @@ namespace freepoll.Controllers
                         questionMetric = metric.forStarRatingAverage(item.SurveyQuestionId);
                         break;
                     case "multiplerating":
-                        questionMetric = metric.forCountAndAverage(item.SurveyQuestionId);
+                        questionMetric = metric.forMultipleStarRatings(item.SurveyQuestionId);
                         break;
                     case "customrating":
-                        questionMetric = metric.forCountAndAverage(item.SurveyQuestionId);
+                        questionMetric = metric.forCustomRatings(item.SurveyQuestionId);
                         break;
                     default:
                         break;
                 }
+                questionMetric.QuestionType = type;
                 questionMetrics.Add(questionMetric);
             }
 

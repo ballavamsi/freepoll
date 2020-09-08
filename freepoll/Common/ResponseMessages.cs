@@ -7,20 +7,21 @@ namespace freepoll.Common
 {
     public static class ResponseMessages
     {
-            public static class Messages
-            {
-                public const string UnauthorizedUserError = "Unauthorized User";
-                public const string Inactiveusererror = "InactiveUser";
-                public const string PollNotFoundError = "PollNotFound";
-                public const string UserNotFoundError = "UserNotFound";
-                public const string PollDeleteSuccess = "Poll Deleted Successfully";
-                public const string PollEnded = "PollEnded";
-                public const string PollVoted = "PollVoted";
-                public const string SurveyNotFoundError = "SurveyNotFound";
-                public const string SurveyEnded = "SurveyEnded";
-                public const string SurveyAlreadyTaken = "";
-                public const string SurveyWasNotStartedByUser = "SurveyWasNotStartedByUser";
-                public const string SurveyWasAlreadySubmitted = "SurveyWasAlreadySubmitted";
+        public static class Messages
+        {
+            public const string UnauthorizedUserError = "Unauthorized User";
+            public const string Inactiveusererror = "InactiveUser";
+            public const string PollNotFoundError = "PollNotFound";
+            public const string UserNotFoundError = "UserNotFound";
+            public const string PollDeleteSuccess = "Poll Deleted Successfully";
+            public const string PollEnded = "PollEnded";
+            public const string PollVoted = "PollVoted";
+            public const string SurveyNotFoundError = "SurveyNotFound";
+            public const string SurveyEnded = "SurveyEnded";
+            public const string SurveyAlreadyTaken = "";
+            public const string SurveyWasNotStartedByUser = "SurveyWasNotStartedByUser";
+            public const string SurveyWasAlreadySubmitted = "SurveyWasAlreadySubmitted";
+            public const string FeedbackNotFound = "FeedbackNotFound";
         }
     }
 }

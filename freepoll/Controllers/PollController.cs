@@ -33,7 +33,7 @@ namespace freepoll.Controllers
 
 
         [Route("add")]
-        [HttpPut]
+        [HttpPost]
         public IActionResult AddNewPoll([FromBody]NewPollViewModel newPoll)
         {
             string userId = Request.Headers[Constants.UserToken];
@@ -103,7 +103,7 @@ namespace freepoll.Controllers
         }
 
         [Route("vote")]
-        [HttpPut]
+        [HttpPost]
         public IActionResult VotePoll([FromBody]PollVoteRequestViewModel newPoll)
         {
             var poll = _dBContext.Poll.Where(x => x.PollId == newPoll.pollId).FirstOrDefault();

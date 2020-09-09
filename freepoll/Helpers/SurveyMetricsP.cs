@@ -71,17 +71,17 @@ namespace freepoll.Helpers
             var minValue = Convert.ToInt32(options.Where(x => x.OptionKey == "min").Select(x=>x.OptionValue).FirstOrDefault());
             var maxValue = Convert.ToInt32(options.Where(x => x.OptionKey == "max").Select(x => x.OptionValue).FirstOrDefault());
 
-            var userSelected = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == questionId).Select(x => x.SurveyQuestionOptionId).ToList();
+            var userSelected = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == questionId && !string.IsNullOrEmpty(x.SurveyQuestionOptionId)).ToList();
             //double avg = userSelected.Average(x => x - minValue);
 
             List<OptionsMetric> optionsMetrics = new List<OptionsMetric>();
 
-            foreach (var item in userSelected.Where(x=> !string.IsNullOrEmpty(x)))
+            foreach (var item in userSelected)
             {
                 OptionsMetric optionsMetric = new OptionsMetric();
-                optionsMetric.optionId = Convert.ToInt32(item);
-                optionsMetric.optionText = item.ToString();
-                optionsMetric.optionCount = Convert.ToInt32(item);
+                optionsMetric.optionId = Convert.ToInt32(item.SurveyQuestionOptionId);
+                optionsMetric.optionText = item.CustomAnswer;
+                optionsMetric.optionCount = Convert.ToInt32(item.SurveyQuestionOptionId);
                 optionsMetrics.Add(optionsMetric);
             }
 
@@ -113,7 +113,7 @@ namespace freepoll.Helpers
             tempOptionsMetric.optionCount = userSelected.Count();
             tempOptionsMetric.optionAverage = userSelected.Where(x=>!string.IsNullOrEmpty(x)).Average(x=>Convert.ToInt32(x));
             optionsMetrics.Add(tempOptionsMetric);
-
+            questionMetric.options = optionsMetrics;
             return questionMetric;
         }
 

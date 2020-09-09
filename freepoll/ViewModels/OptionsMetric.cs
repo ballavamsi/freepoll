@@ -1,4 +1,5 @@
-﻿using System;
+﻿using freepoll.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,6 +20,7 @@ namespace freepoll.ViewModels
         public string Explanation { get; set; }
         public string QuestionType { get; set; }
         public List<OptionsMetric> options { get; set; }
+        public List<SurveyQuestionOptions> originalQuestionOptions { get; set; }
     }
 
 

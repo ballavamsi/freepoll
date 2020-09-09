@@ -87,6 +87,8 @@ namespace freepoll.ViewModels
 
     public class UserFeedbackResponse
     {
+        public string surveyTitle { get; set; }
+        public string surveyLogo { get; set; }
         public List<Feedbacks> feedbacks { get; set; }
         public int total { get; set; }
     }

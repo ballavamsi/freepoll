@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using freepoll.Helpers;
 using freepoll.Common;
 using static freepoll.Common.ResponseMessages;
+using freepoll.UserModels;
 
 namespace freepoll.Controllers
 {
@@ -106,7 +107,7 @@ namespace freepoll.Controllers
 
             surview = _mapper.Map<SurveyViewModel>(sur);
 
-            List<SurveyQuestions> questions = _dBContext.SurveyQuestions.Where(x => x.SurveyId == id).ToList();
+            List<SurveyQuestions> questions = _dBContext.SurveyQuestions.Where(x => x.SurveyId == id && x.StatusId != (int)EnumStatus.Deleted).ToList();
 
             List<SurveyQuestionsViewModel> viewquestions = new List<SurveyQuestionsViewModel>();
 
@@ -150,7 +151,7 @@ namespace freepoll.Controllers
                 surv.Welcomeimage = sur.Welcomeimage;
                 surv.SurveyGuid = sur.SurveyGuid;
 
-                List<SurveyQuestions> questions = _dBContext.SurveyQuestions.OrderBy(x=>x.QuestionDisplayOrder).Where(x => x.SurveyId == sur.Surveyid).ToList();
+                List<SurveyQuestions> questions = _dBContext.SurveyQuestions.OrderBy(x=>x.QuestionDisplayOrder).Where(x => x.SurveyId == sur.Surveyid && x.StatusId != (int)EnumStatus.Deleted).ToList();
 
                 List<SurveyQuestionsViewModel> viewquestions = new List<SurveyQuestionsViewModel>();
 
@@ -235,7 +236,7 @@ namespace freepoll.Controllers
             if (surveyUsers.CompletedDatetime != null)
                 return BadRequest(Messages.SurveyWasAlreadySubmitted);
 
-            List<SurveyQuestions> questions = _dBContext.SurveyQuestions.Where(x => x.SurveyId == sur.Surveyid).ToList();
+            List<SurveyQuestions> questions = _dBContext.SurveyQuestions.Where(x => x.SurveyId == sur.Surveyid && x.StatusId != (int)EnumStatus.Deleted).ToList();
             List<QuestionType> lstQuestionTypes = _dBContext.QuestionType.ToList();
             List<SurveyUserQuestionOptions> lstSurveyUserQuestionOptions = new List<SurveyUserQuestionOptions>();
 
@@ -505,9 +506,9 @@ namespace freepoll.Controllers
             return Ok(surveyUser);
         }
 
-        [Route("user/feedbacks/{surveyId}/pagenumber/{pagenum}/pagesize/{pagesize}")]
+        [Route("user/feedbacks/{surveyGuid}/pagenumber/{pagenum}/pagesize/{pagesize}")]
         [HttpGet]
-        public IActionResult GetFeedbacks(int surveyId,int pagenum,int pagesize)
+        public IActionResult GetFeedbacks(string surveyGuid, int pagenum,int pagesize)
         {
             UserFeedbackResponse userFeedbackResponse = new UserFeedbackResponse();
             string userguid = Request.Headers[Constants.UserToken];
@@ -518,12 +519,15 @@ namespace freepoll.Controllers
 
             if (user == null) return BadRequest(Messages.UserNotFoundError);
 
-            Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyId).FirstOrDefault();
+            Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.SurveyGuid == surveyGuid).FirstOrDefault();
 
             if (survey == null) return BadRequest(Messages.SurveyNotFoundError);
 
+            userFeedbackResponse.surveyTitle = survey.Welcometitle;
+            userFeedbackResponse.surveyLogo = survey.Welcomeimage;
+
             var userFeedbacks = from fb in _dBContext.SurveyUser
-                                where fb.SurveyId == surveyId && fb.CompletedDatetime != null
+                                where fb.SurveyId == survey.Surveyid && fb.CompletedDatetime != null
                                 orderby fb.InsertedDatetime descending
                                 select new Feedbacks()
                                 {
@@ -547,9 +551,9 @@ namespace freepoll.Controllers
             return Ok(userFeedbackResponse);
         }
 
-        [Route("user/graphmetrics/{surveyId}")]
+        [Route("user/graphmetrics/{surveyGuid}")]
         [HttpGet]
-        public IActionResult UserSurveyReports(int surveyId)
+        public IActionResult UserSurveyReports(string surveyGuid)
         {
             SurveyMetrics metric = new SurveyMetrics(_dBContext, _mapper);
             string userguid = Request.Headers[Constants.UserToken];
@@ -560,20 +564,21 @@ namespace freepoll.Controllers
 
             if (user == null) return BadRequest(Messages.UserNotFoundError);
 
-            Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyId).FirstOrDefault();
+            Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.SurveyGuid == surveyGuid).FirstOrDefault();
 
             if (survey == null) return BadRequest(Messages.SurveyNotFoundError);
 
-            SurveyViewModel surveyViewModel = (SurveyViewModel)((OkObjectResult)GetSurvey(survey.Surveyid)).Value;
+            List<SurveyQuestions> surveyQuestions = _dBContext.SurveyQuestions.Where(x => x.StatusId != (int)EnumStatus.Deleted && x.SurveyId == survey.Surveyid).ToList();
 
             List<QuestionType> questionType = _dBContext.QuestionType.ToList();
 
             SurveyMetricViewModel surveyMetric = new SurveyMetricViewModel();
             List<QuestionMetricViewModel> questionMetrics = new List<QuestionMetricViewModel>();
-            foreach (var item in surveyViewModel.SurveyQuestions)
+            foreach (var item in surveyQuestions)
             {
                 QuestionMetricViewModel questionMetric = new QuestionMetricViewModel();
                 var type = questionType.Where(x => x.TypeId == item.TypeId).Select(x => x.TypeCode).FirstOrDefault();
+
                 switch (type)
                 {
                     case "radiobuttons":
@@ -607,6 +612,8 @@ namespace freepoll.Controllers
                         break;
                 }
                 questionMetric.QuestionType = type;
+                questionMetric.originalQuestionOptions = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).ToList();
+
                 questionMetrics.Add(questionMetric);
             }
 

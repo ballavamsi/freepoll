@@ -33,11 +33,9 @@ namespace freepoll.Controllers
 
 
         [Route("add")]
-        [HttpPut]
+        [HttpPost]
         public IActionResult AddNewPoll([FromBody]NewPollViewModel newPoll)
         {
-            //     int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
-
             string userId = Request.Headers[Constants.UserToken];
             string decyrptstring = Security.Decrypt(userId);
             if (decyrptstring == null) return BadRequest();
@@ -46,15 +44,9 @@ namespace freepoll.Controllers
 
             if (user == null) return BadRequest(Messages.UserNotFoundError);
 
-            Poll p = new Poll();
-            p.Name = newPoll.name;
-            p.StatusId = newPoll.status;
-            p.Enddate = Convert.ToDateTime(newPoll.endDate);
+            Poll p = _mapper.Map<Poll>(newPoll);
             p.CreatedDate = DateTime.UtcNow;
             p.CreatedBy = user.Userid;
-            p.Type = Int16.Parse(newPoll.type);
-            p.Duplicate = Int16.Parse(newPoll.duplicate);
-            p.PollGuid = ShortUrl.GenerateShortUrl();
 
             _dBContext.Poll.Add(p);
             _dBContext.SaveChanges();
@@ -68,7 +60,7 @@ namespace freepoll.Controllers
                 options.PollId = p.PollId;
                 options.OptionText = item;
                 options.StatusId = p.StatusId;
-                options.CreatedBy = Resources.SystemUser;
+                options.CreatedBy = user.Userid;
                 options.CreatedDate = DateTime.UtcNow;
                 options.OrderId = order;
                 lstPollOptions.Add(options);
@@ -111,7 +103,7 @@ namespace freepoll.Controllers
         }
 
         [Route("vote")]
-        [HttpPut]
+        [HttpPost]
         public IActionResult VotePoll([FromBody]PollVoteRequestViewModel newPoll)
         {
             var poll = _dBContext.Poll.Where(x => x.PollId == newPoll.pollId).FirstOrDefault();

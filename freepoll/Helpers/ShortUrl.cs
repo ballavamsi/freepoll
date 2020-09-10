@@ -15,7 +15,9 @@ namespace freepoll.Helpers
               .OrderBy(o => new Random().Next())
               .ToList()
               .ForEach(i => urlsafe += Convert.ToChar(i));
-            string token = urlsafe.Substring(new Random().Next(0, urlsafe.Length), new Random().Next(2, 6));
+            int maxLength = new Random().Next(3, 6);
+            int minLength = new Random().Next(0, urlsafe.Length - 6);
+            string token = urlsafe.Substring(minLength, maxLength);
 
             return token;
 

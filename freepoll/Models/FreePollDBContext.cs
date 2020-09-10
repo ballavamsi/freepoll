@@ -28,6 +28,10 @@ namespace freepoll.Models
         public virtual DbSet<SurveyUserQuestionOptions> SurveyUserQuestionOptions { get; set; }
         public virtual DbSet<User> User { get; set; }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<DataStarOptions>(entity =>
@@ -423,6 +427,18 @@ namespace freepoll.Models
                 entity.Property(e => e.InsertedDatetime)
                     .HasColumnName("inserted_datetime")
                     .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.Property(e => e.ReviewComment)
+                    .HasColumnName("review_comment")
+                    .HasMaxLength(1000)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.ReviewCompleted)
+                    .HasColumnName("review_completed")
+                    .HasColumnType("int(1)")
+                    .HasDefaultValueSql("'0'");
+
+                entity.Property(e => e.ReviewDatetime).HasColumnName("review_datetime");
 
                 entity.Property(e => e.SurveyId)
                     .HasColumnName("survey_id")

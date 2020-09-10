@@ -37,6 +37,11 @@ namespace freepoll.Common
 
         public static string Decrypt(string cipherText)
         {
+            var isLocal = false;
+            if(isLocal)
+            {
+                return "a64afc20-d22d-4e99-8f60-c04211e486c2";            
+            }
             try
             {
                 string EncryptionKey = Environment.GetEnvironmentVariable("FREEPOLL_SECURITY_KEY");

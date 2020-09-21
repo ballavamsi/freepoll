@@ -80,7 +80,7 @@ namespace freepoll.Controllers
             List<User> users = new List<User>();
             users = _dBContext.User.ToList();
 
-            user = _dBContext.User.Where(x => x.Email == logindetails.email.ToLower()).FirstOrDefault();
+            user = users.Where(x => x.Email == logindetails.email.ToLower()).FirstOrDefault();
 
             
 

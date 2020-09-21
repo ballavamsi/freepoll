@@ -110,7 +110,7 @@ namespace freepoll.Controllers
             List<SurveyQuestions> questions = _dBContext.SurveyQuestions.Where(x => x.SurveyId == id && x.StatusId != (int)EnumStatus.Deleted).ToList();
 
             List<SurveyQuestionsViewModel> viewquestions = new List<SurveyQuestionsViewModel>();
-
+           
             foreach (var item in questions)
             {
                 SurveyQuestionsViewModel viewquestion = _mapper.Map<SurveyQuestionsViewModel>(item);
@@ -578,7 +578,6 @@ namespace freepoll.Controllers
             {
                 QuestionMetricViewModel questionMetric = new QuestionMetricViewModel();
                 var type = questionType.Where(x => x.TypeId == item.TypeId).Select(x => x.TypeCode).FirstOrDefault();
-
                 switch (type)
                 {
                     case "radiobuttons":
@@ -624,6 +623,69 @@ namespace freepoll.Controllers
             return Ok(surveyMetric);
         }
 
+        [Route("user/feedback/{surveyUserGuid}")]
+        [HttpGet]
+        public IActionResult GetSurveyUserFeedback(string surveyUserGuid)
+        {
+            SurveyViewModel surview = new SurveyViewModel();
+            string userguid = Request.Headers[Constants.UserToken];
+            string decyrptstring = Security.Decrypt(userguid);
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
+
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            SurveyUser surveyuser = _dBContext.SurveyUser.Where(x => x.SurveyUserGuid == surveyUserGuid).FirstOrDefault();
+
+            if (surveyuser == null) return BadRequest(Messages.SurveyUserNotFoundError);
+
+            Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyuser.SurveyId).FirstOrDefault();
+
+            if (survey == null) return BadRequest(Messages.SurveyNotFoundError);
+
+            surview = _mapper.Map<SurveyViewModel>(survey);
+
+            List<SurveyQuestions> surveyQuestions = _dBContext.SurveyQuestions.Where(x => x.StatusId != (int)EnumStatus.Deleted && x.SurveyId == survey.Surveyid).ToList();
+            List<QuestionType> questiontypes = _dBContext.QuestionType.ToList();
+            List<SurveyQuestionsViewModel> viewquestions = new List<SurveyQuestionsViewModel>();
+
+            foreach (var item in surveyQuestions)
+            {
+                SurveyQuestionsViewModel viewquestion = _mapper.Map<SurveyQuestionsViewModel>(item);
+                List<SurveyUserQuestionOptions> surveyuserquestionoptions = new List<SurveyUserQuestionOptions>();
+                List<string> selectedoptions = new List<string>();
+                string optiontypevalue = null;
+                List<SurveyQuestionOptions> options = new List<SurveyQuestionOptions>();
+                options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).OrderBy(x => x.OptionKey).ToList();
+                surveyuserquestionoptions = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId && x.SurveyUserId == surveyuser.SurveyUserId).ToList();
+                if (questiontypes != null)
+                {
+                    optiontypevalue = questiontypes.FirstOrDefault(x => x.TypeId == item.TypeId).TypeValue;
+                }
+                if (surveyuserquestionoptions != null)
+                {
+                        foreach (var itemq in surveyuserquestionoptions)
+                        {
+                            string option = null;
+                            option = itemq.SurveyQuestionOptionId;
+                            selectedoptions.Add(option);
+                        }
+                }                
+                Dictionary<string, object> dict = new Dictionary<string, object>();
+                foreach (var opt in options)
+                {                   
+                    dict.Add(opt.OptionKey, opt.OptionValue);
+                }
+                viewquestion.Options = dict;
+                viewquestion.ObjectOptions = options;
+                viewquestion.questiontype = optiontypevalue;
+                viewquestion.selectedValues = selectedoptions;
+                viewquestions.Add(viewquestion);
+            }
+            surview.SurveyQuestions = viewquestions;
+            return Ok(surview);
+        }
 
     }
 }

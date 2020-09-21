@@ -17,6 +17,7 @@ namespace freepoll.Common
             public const string PollEnded = "PollEnded";
             public const string PollVoted = "PollVoted";
             public const string SurveyNotFoundError = "SurveyNotFound";
+            public const string SurveyUserNotFoundError = "SurveyUserNotFound";
             public const string SurveyEnded = "SurveyEnded";
             public const string SurveyAlreadyTaken = "";
             public const string SurveyWasNotStartedByUser = "SurveyWasNotStartedByUser";

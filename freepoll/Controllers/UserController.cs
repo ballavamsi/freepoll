@@ -77,7 +77,12 @@ namespace freepoll.Controllers
             User user = new User();
             UserResponseViewModel userResponseViewModel = new UserResponseViewModel();
 
-            user = _dBContext.User.Where(x => x.Email == logindetails.email.ToLower()).FirstOrDefault();
+            List<User> users = new List<User>();
+            users = _dBContext.User.ToList();
+
+            user = users.Where(x => x.Email == logindetails.email.ToLower()).FirstOrDefault();
+
+            
 
             if(user == null)
             {

@@ -22,15 +22,11 @@ namespace freepoll.Models
         public virtual DbSet<QuestionType> QuestionType { get; set; }
         public virtual DbSet<Status> Status { get; set; }
         public virtual DbSet<Survey> Survey { get; set; }
+        public virtual DbSet<SurveyFeedback> SurveyFeedback { get; set; }
+        public virtual DbSet<SurveyFeedbackQuestionOptions> SurveyFeedbackQuestionOptions { get; set; }
         public virtual DbSet<SurveyQuestionOptions> SurveyQuestionOptions { get; set; }
         public virtual DbSet<SurveyQuestions> SurveyQuestions { get; set; }
-        public virtual DbSet<SurveyUser> SurveyUser { get; set; }
-        public virtual DbSet<SurveyUserQuestionOptions> SurveyUserQuestionOptions { get; set; }
         public virtual DbSet<User> User { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -318,6 +314,79 @@ namespace freepoll.Models
                     .IsUnicode(false);
             });
 
+            modelBuilder.Entity<SurveyFeedback>(entity =>
+            {
+                entity.ToTable("Survey_Feedback");
+
+                entity.Property(e => e.SurveyFeedbackId)
+                    .HasColumnName("survey_feedback_id")
+                    .HasColumnType("int(10)");
+
+                entity.Property(e => e.CompletedDatetime).HasColumnName("completed_datetime");
+
+                entity.Property(e => e.InsertedDatetime)
+                    .HasColumnName("inserted_datetime")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.Property(e => e.ReviewComment)
+                    .HasColumnName("review_comment")
+                    .HasMaxLength(1000)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.ReviewCompleted)
+                    .HasColumnName("review_completed")
+                    .HasColumnType("int(1)")
+                    .HasDefaultValueSql("'0'");
+
+                entity.Property(e => e.ReviewDatetime).HasColumnName("review_datetime");
+
+                entity.Property(e => e.SurveyId)
+                    .HasColumnName("survey_id")
+                    .HasColumnType("int(11)");
+
+                entity.Property(e => e.SurveyUserEmail)
+                    .IsRequired()
+                    .HasColumnName("survey_user_email")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.SurveyUserGuid)
+                    .HasColumnName("survey_user_guid")
+                    .HasMaxLength(1000)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<SurveyFeedbackQuestionOptions>(entity =>
+            {
+                entity.ToTable("Survey_Feedback_Question_Options");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasColumnType("int(10)");
+
+                entity.Property(e => e.CustomAnswer)
+                    .HasColumnName("custom_answer")
+                    .HasMaxLength(10000)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.InsertedDatetime)
+                    .HasColumnName("inserted_datetime")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.Property(e => e.SurveyFeedbackId)
+                    .HasColumnName("survey_feedback_id")
+                    .HasColumnType("int(10)");
+
+                entity.Property(e => e.SurveyQuestionId)
+                    .HasColumnName("survey_question_id")
+                    .HasColumnType("int(10)");
+
+                entity.Property(e => e.SurveyQuestionOptionId)
+                    .HasColumnName("survey_question_option_id")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+            });
+
             modelBuilder.Entity<SurveyQuestionOptions>(entity =>
             {
                 entity.HasKey(e => e.SurveyQuestionOptionId)
@@ -412,79 +481,6 @@ namespace freepoll.Models
                     .HasColumnType("int(11)");
 
                 entity.Property(e => e.UpdatedDate).HasColumnName("updated_date");
-            });
-
-            modelBuilder.Entity<SurveyUser>(entity =>
-            {
-                entity.ToTable("Survey_User");
-
-                entity.Property(e => e.SurveyUserId)
-                    .HasColumnName("survey_user_id")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.CompletedDatetime).HasColumnName("completed_datetime");
-
-                entity.Property(e => e.InsertedDatetime)
-                    .HasColumnName("inserted_datetime")
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                entity.Property(e => e.ReviewComment)
-                    .HasColumnName("review_comment")
-                    .HasMaxLength(1000)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.ReviewCompleted)
-                    .HasColumnName("review_completed")
-                    .HasColumnType("int(1)")
-                    .HasDefaultValueSql("'0'");
-
-                entity.Property(e => e.ReviewDatetime).HasColumnName("review_datetime");
-
-                entity.Property(e => e.SurveyId)
-                    .HasColumnName("survey_id")
-                    .HasColumnType("int(11)");
-
-                entity.Property(e => e.SurveyUserEmail)
-                    .IsRequired()
-                    .HasColumnName("survey_user_email")
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.SurveyUserGuid)
-                    .HasColumnName("survey_user_guid")
-                    .HasMaxLength(1000)
-                    .IsUnicode(false);
-            });
-
-            modelBuilder.Entity<SurveyUserQuestionOptions>(entity =>
-            {
-                entity.ToTable("Survey_User_Question_Options");
-
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.CustomAnswer)
-                    .HasColumnName("custom_answer")
-                    .HasMaxLength(10000)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.InsertedDatetime)
-                    .HasColumnName("inserted_datetime")
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                entity.Property(e => e.SurveyQuestionId)
-                    .HasColumnName("survey_question_id")
-                    .HasColumnType("int(10)");
-
-                entity.Property(e => e.SurveyQuestionOptionId)
-                    .HasColumnName("survey_question_option_id")
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.SurveyUserId)
-                    .HasColumnName("survey_user_id")
-                    .HasColumnType("int(10)");
             });
 
             modelBuilder.Entity<User>(entity =>

@@ -62,7 +62,7 @@ namespace freepoll.Controllers
             dashboardMetricsViewModel.surveys = surveys.Count;
 
             List<int> surveyIds = surveys.Select(x => x.Surveyid).ToList();
-            List<SurveyUser> surveyUsers = (from eachSurvey in _dBContext.SurveyUser
+            List<SurveyFeedback> surveyUsers = (from eachSurvey in _dBContext.SurveyFeedback
                                             where surveyIds.Contains(eachSurvey.SurveyId) && eachSurvey.CompletedDatetime != null
                                             select eachSurvey).ToList();
 

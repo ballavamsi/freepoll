@@ -25,7 +25,7 @@ namespace freepoll.Helpers
             questionMetric.Explanation = question.Subtitle;
 
             var options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == questionId).ToList();
-            var total = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == questionId).Count();
+            var total = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == questionId).Count();
             var count = 0;
             List<OptionsMetric> optionsMetrics = new List<OptionsMetric>();
             foreach (var item in options)
@@ -33,7 +33,7 @@ namespace freepoll.Helpers
                 OptionsMetric optionsMetric = new OptionsMetric();
                 optionsMetric.optionId = item.SurveyQuestionOptionId;
                 optionsMetric.optionText = item.OptionValue;
-                optionsMetric.optionCount = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == questionId && x.SurveyQuestionOptionId.Equals(item.SurveyQuestionOptionId.ToString())).Count();
+                optionsMetric.optionCount = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == questionId && x.SurveyQuestionOptionId.Equals(item.SurveyQuestionOptionId.ToString())).Count();
                 optionsMetric.optionAverage = (Convert.ToDouble(optionsMetric.optionCount) / total) * 100;
                 count += optionsMetric.optionCount;
                 optionsMetrics.Add(optionsMetric);
@@ -66,12 +66,12 @@ namespace freepoll.Helpers
             questionMetric.Explanation = question.Subtitle;
 
             var options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == questionId).ToList();
-            var total = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == questionId).Count();
+            var total = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == questionId).Count();
 
             var minValue = Convert.ToInt32(options.Where(x => x.OptionKey == "min").Select(x=>x.OptionValue).FirstOrDefault());
             var maxValue = Convert.ToInt32(options.Where(x => x.OptionKey == "max").Select(x => x.OptionValue).FirstOrDefault());
 
-            var userSelected = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == questionId && !string.IsNullOrEmpty(x.SurveyQuestionOptionId)).ToList();
+            var userSelected = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == questionId && !string.IsNullOrEmpty(x.SurveyQuestionOptionId)).ToList();
             //double avg = userSelected.Average(x => x - minValue);
 
             List<OptionsMetric> optionsMetrics = new List<OptionsMetric>();
@@ -101,9 +101,9 @@ namespace freepoll.Helpers
             questionMetric.Explanation = question.Subtitle;
 
             var options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == questionId).ToList();
-            var total = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == questionId).Count();
+            var total = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == questionId).Count();
 
-            var userSelected = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == questionId).Select(x => x.SurveyQuestionOptionId).ToList();
+            var userSelected = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == questionId).Select(x => x.SurveyQuestionOptionId).ToList();
             //double avg = userSelected.Average(x => x - minValue);
 
             List<OptionsMetric> optionsMetrics = new List<OptionsMetric>();
@@ -130,12 +130,12 @@ namespace freepoll.Helpers
             questionMetric.Explanation = question.Subtitle;
 
             var options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == questionId).ToList();
-            var total = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == questionId).Count();
+            var total = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == questionId).Count();
             var count = 0;
             List<OptionsMetric> optionsMetrics = new List<OptionsMetric>();
             foreach (var item in options)
             {
-                var userSelected = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == questionId && x.SurveyQuestionOptionId == item.SurveyQuestionOptionId.ToString()).Select(x => x.CustomAnswer).ToList();
+                var userSelected = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == questionId && x.SurveyQuestionOptionId == item.SurveyQuestionOptionId.ToString()).Select(x => x.CustomAnswer).ToList();
 
                 OptionsMetric optionsMetric = new OptionsMetric();
                 optionsMetric.optionId = item.SurveyQuestionOptionId;
@@ -164,7 +164,7 @@ namespace freepoll.Helpers
             questionMetric.Explanation = question.Subtitle;
 
             var options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == questionId).OrderBy(x=>x.OptionKey).ToList();
-            var userOptions = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == questionId).ToList();
+            var feedbackOptions = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == questionId).ToList();
             var count = 0;
             List<OptionsMetric> optionsMetrics = new List<OptionsMetric>();
             foreach (var item in options.Where(x=>x.OptionKey.StartsWith("value")))
@@ -174,7 +174,7 @@ namespace freepoll.Helpers
                 optionsMetric.optionText = item.OptionValue;
 
                 List<OptionsMetric> subOptionsMetrics = new List<OptionsMetric>();
-                var currentOptionSelectedChoicesList = userOptions.Where(x=>x.SurveyQuestionOptionId == item.SurveyQuestionOptionId.ToString());
+                var currentOptionSelectedChoicesList = feedbackOptions.Where(x=>x.SurveyQuestionOptionId == item.SurveyQuestionOptionId.ToString());
 
                 foreach (var subitem in options.Where(x => x.OptionKey.StartsWith("x_value")))
                 {

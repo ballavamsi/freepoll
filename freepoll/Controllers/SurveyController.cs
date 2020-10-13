@@ -202,17 +202,17 @@ namespace freepoll.Controllers
             if (sur.Enddate < DateTime.UtcNow)
                 return BadRequest(Messages.SurveyEnded);
 
-            bool checkSurveyEmail = _dBContext.SurveyUser.Any(x => x.SurveyId == sur.Surveyid && x.SurveyUserEmail.ToLower().Equals(emailId));
+            bool checkSurveyEmail = _dBContext.SurveyFeedback.Any(x => x.SurveyId == sur.Surveyid && x.SurveyUserEmail.ToLower().Equals(emailId));
             if (checkSurveyEmail && Convert.ToBoolean(sur.Emailidrequired) && !string.IsNullOrEmpty(emailId))
                 return BadRequest(Messages.SurveyAlreadyTaken);
 
-            SurveyUser surveyUser = new SurveyUser();
+            SurveyFeedback surveyUser = new SurveyFeedback();
             surveyUser.SurveyId = sur.Surveyid;
             surveyUser.SurveyUserEmail = emailId;
             surveyUser.SurveyUserGuid = Guid.NewGuid().ToString();
             surveyUser.InsertedDatetime = DateTime.UtcNow;
 
-            _dBContext.SurveyUser.Add(surveyUser);
+            _dBContext.SurveyFeedback.Add(surveyUser);
             _dBContext.SaveChanges();
             return Ok(surveyUser);
         }
@@ -230,7 +230,7 @@ namespace freepoll.Controllers
             if (sur.Enddate < DateTime.UtcNow)
                 return BadRequest(Messages.SurveyEnded);
 
-            var surveyUsers = _dBContext.SurveyUser.Where(x => x.SurveyId == sur.Surveyid && x.SurveyUserGuid.Equals(session)).FirstOrDefault();
+            var surveyUsers = _dBContext.SurveyFeedback.Where(x => x.SurveyId == sur.Surveyid && x.SurveyUserGuid.Equals(session)).FirstOrDefault();
             if (surveyUsers == null)
                 return BadRequest(Messages.SurveyWasNotStartedByUser);
             if (surveyUsers.CompletedDatetime != null)
@@ -238,17 +238,17 @@ namespace freepoll.Controllers
 
             List<SurveyQuestions> questions = _dBContext.SurveyQuestions.Where(x => x.SurveyId == sur.Surveyid && x.StatusId != (int)EnumStatus.Deleted).ToList();
             List<QuestionType> lstQuestionTypes = _dBContext.QuestionType.ToList();
-            List<SurveyUserQuestionOptions> lstSurveyUserQuestionOptions = new List<SurveyUserQuestionOptions>();
+            List<SurveyFeedbackQuestionOptions> lstSurveyFeedbackQuestionOptions = new List<SurveyFeedbackQuestionOptions>();
 
             for (int i = 0; i < questions.Count; i++)
             {
-                SurveyUserQuestionOptions surveyUserQuestionOption = new SurveyUserQuestionOptions();
-                surveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
-                surveyUserQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
-                surveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
+                SurveyFeedbackQuestionOptions surveyFeedbackQuestionOption = new SurveyFeedbackQuestionOptions();
+                surveyFeedbackQuestionOption.SurveyFeedbackId = surveyUsers.SurveyFeedbackId;
+                surveyFeedbackQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
+                surveyFeedbackQuestionOption.InsertedDatetime = DateTime.UtcNow;
 
                 QuestionAnswersViewModel requestViewModel = jObject.Where(x=> x.key == questions[i].SurveyQuestionId.ToString()).FirstOrDefault();
-                List<SurveyQuestionOptions> surveyQuestionOptions = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == surveyUserQuestionOption.SurveyQuestionId).OrderBy(x=>x.OptionKey).ToList();
+                List<SurveyQuestionOptions> surveyQuestionOptions = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == surveyFeedbackQuestionOption.SurveyQuestionId).OrderBy(x=>x.OptionKey).ToList();
                 var questionTypeCode = lstQuestionTypes.Where(x => x.TypeId == questions[i].TypeId).FirstOrDefault().TypeCode;
                 bool addToList = true;
                 int tempNumber = 0;
@@ -256,69 +256,69 @@ namespace freepoll.Controllers
                 switch (questionTypeCode)
                 {
                     case "essay":
-                        surveyUserQuestionOption.CustomAnswer = requestViewModel.text;
+                        surveyFeedbackQuestionOption.CustomAnswer = requestViewModel.text;
                         break;
                     case "radiobuttons":
-                        surveyUserQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
+                        surveyFeedbackQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
                         break;
                     case "imageradiobuttons":
-                        surveyUserQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
+                        surveyFeedbackQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
                         break;
                     case "multiple":
                         foreach (var item in requestViewModel.selected)
                         {
-                            SurveyUserQuestionOptions tempSurveyUserQuestionOption = new SurveyUserQuestionOptions();
-                            tempSurveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
-                            tempSurveyUserQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
-                            tempSurveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
-                            tempSurveyUserQuestionOption.SurveyQuestionOptionId = item;
-                            lstSurveyUserQuestionOptions.Add(tempSurveyUserQuestionOption);
+                            SurveyFeedbackQuestionOptions tempSurveyFeedbackQuestionOption = new SurveyFeedbackQuestionOptions();
+                            tempSurveyFeedbackQuestionOption.SurveyFeedbackId = surveyUsers.SurveyFeedbackId;
+                            tempSurveyFeedbackQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
+                            tempSurveyFeedbackQuestionOption.InsertedDatetime = DateTime.UtcNow;
+                            tempSurveyFeedbackQuestionOption.SurveyQuestionOptionId = item;
+                            lstSurveyFeedbackQuestionOptions.Add(tempSurveyFeedbackQuestionOption);
                         }
                         addToList = false;
                         break;
                     case "imagemultiple":
                         foreach (var item in requestViewModel.selected)
                         {
-                            SurveyUserQuestionOptions tempSurveyUserQuestionOption = new SurveyUserQuestionOptions();
-                            tempSurveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
-                            tempSurveyUserQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
-                            tempSurveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
-                            tempSurveyUserQuestionOption.SurveyQuestionOptionId = item;
-                            lstSurveyUserQuestionOptions.Add(tempSurveyUserQuestionOption);
+                            SurveyFeedbackQuestionOptions tempSurveyFeedbackQuestionOption = new SurveyFeedbackQuestionOptions();
+                            tempSurveyFeedbackQuestionOption.SurveyFeedbackId = surveyUsers.SurveyFeedbackId;
+                            tempSurveyFeedbackQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
+                            tempSurveyFeedbackQuestionOption.InsertedDatetime = DateTime.UtcNow;
+                            tempSurveyFeedbackQuestionOption.SurveyQuestionOptionId = item;
+                            lstSurveyFeedbackQuestionOptions.Add(tempSurveyFeedbackQuestionOption);
                         }
                         addToList = false;
                         break;
                     case "slider":
-                        surveyUserQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
+                        surveyFeedbackQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
                         break;
                     case "rangeslider":
                         int j = 0;
                         foreach (var item in requestViewModel.selected)
                         {
-                            SurveyUserQuestionOptions tempSurveyUserQuestionOption = new SurveyUserQuestionOptions();
-                            tempSurveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
-                            tempSurveyUserQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
-                            tempSurveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
-                            tempSurveyUserQuestionOption.SurveyQuestionOptionId = item;
-                            tempSurveyUserQuestionOption.CustomAnswer = j == 0 ? "min" : "max";
-                            lstSurveyUserQuestionOptions.Add(tempSurveyUserQuestionOption);
+                            SurveyFeedbackQuestionOptions tempSurveyFeedbackQuestionOption = new SurveyFeedbackQuestionOptions();
+                            tempSurveyFeedbackQuestionOption.SurveyFeedbackId = surveyUsers.SurveyFeedbackId;
+                            tempSurveyFeedbackQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
+                            tempSurveyFeedbackQuestionOption.InsertedDatetime = DateTime.UtcNow;
+                            tempSurveyFeedbackQuestionOption.SurveyQuestionOptionId = item;
+                            tempSurveyFeedbackQuestionOption.CustomAnswer = j == 0 ? "min" : "max";
+                            lstSurveyFeedbackQuestionOptions.Add(tempSurveyFeedbackQuestionOption);
                             j++;
                         }
                         addToList = false;
                         break;
                     case "starrating":
-                        surveyUserQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
+                        surveyFeedbackQuestionOption.SurveyQuestionOptionId = requestViewModel.number.ToString();
                         break;
                     case "multiplerating":
                         foreach (var item in requestViewModel.selected)
                         {
-                            SurveyUserQuestionOptions tempSurveyUserQuestionOption = new SurveyUserQuestionOptions();
-                            tempSurveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
-                            tempSurveyUserQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
-                            tempSurveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
-                            tempSurveyUserQuestionOption.SurveyQuestionOptionId = surveyQuestionOptions[tempNumber].SurveyQuestionOptionId.ToString();
-                            tempSurveyUserQuestionOption.CustomAnswer = item;
-                            lstSurveyUserQuestionOptions.Add(tempSurveyUserQuestionOption);
+                            SurveyFeedbackQuestionOptions tempSurveyFeedbackQuestionOption = new SurveyFeedbackQuestionOptions();
+                            tempSurveyFeedbackQuestionOption.SurveyFeedbackId = surveyUsers.SurveyFeedbackId;
+                            tempSurveyFeedbackQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
+                            tempSurveyFeedbackQuestionOption.InsertedDatetime = DateTime.UtcNow;
+                            tempSurveyFeedbackQuestionOption.SurveyQuestionOptionId = surveyQuestionOptions[tempNumber].SurveyQuestionOptionId.ToString();
+                            tempSurveyFeedbackQuestionOption.CustomAnswer = item;
+                            lstSurveyFeedbackQuestionOptions.Add(tempSurveyFeedbackQuestionOption);
                             tempNumber++;
                         }
                         addToList = false;
@@ -328,26 +328,26 @@ namespace freepoll.Controllers
                         var surveyQuestionOptionsValues = surveyQuestionOptions.Where(x => x.OptionKey.StartsWith("value")).OrderBy(x => x.OptionKey).ToList();
                         foreach (var item in requestViewModel.selected)
                         {
-                            SurveyUserQuestionOptions tempSurveyUserQuestionOption = new SurveyUserQuestionOptions();
-                            tempSurveyUserQuestionOption.SurveyUserId = surveyUsers.SurveyUserId;
-                            tempSurveyUserQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
-                            tempSurveyUserQuestionOption.InsertedDatetime = DateTime.UtcNow;
-                            tempSurveyUserQuestionOption.SurveyQuestionOptionId = surveyQuestionOptionsValues[tempNumber].SurveyQuestionOptionId.ToString();
-                            tempSurveyUserQuestionOption.CustomAnswer = item;
-                            lstSurveyUserQuestionOptions.Add(tempSurveyUserQuestionOption);
+                            SurveyFeedbackQuestionOptions tempSurveyFeedbackQuestionOption = new SurveyFeedbackQuestionOptions();
+                            tempSurveyFeedbackQuestionOption.SurveyFeedbackId = surveyUsers.SurveyFeedbackId;
+                            tempSurveyFeedbackQuestionOption.SurveyQuestionId = questions[i].SurveyQuestionId;
+                            tempSurveyFeedbackQuestionOption.InsertedDatetime = DateTime.UtcNow;
+                            tempSurveyFeedbackQuestionOption.SurveyQuestionOptionId = surveyQuestionOptionsValues[tempNumber].SurveyQuestionOptionId.ToString();
+                            tempSurveyFeedbackQuestionOption.CustomAnswer = item;
+                            lstSurveyFeedbackQuestionOptions.Add(tempSurveyFeedbackQuestionOption);
                             tempNumber++;
                         }
                         addToList = false;
                         break;
                     default:
-                        surveyUserQuestionOption.CustomAnswer = requestViewModel.text; 
+                        surveyFeedbackQuestionOption.CustomAnswer = requestViewModel.text; 
                         break;
                 }
 
-                if (addToList) lstSurveyUserQuestionOptions.Add(surveyUserQuestionOption);
+                if (addToList) lstSurveyFeedbackQuestionOptions.Add(surveyFeedbackQuestionOption);
             }
 
-            _dBContext.SurveyUserQuestionOptions.AddRange(lstSurveyUserQuestionOptions);
+            _dBContext.SurveyFeedbackQuestionOptions.AddRange(lstSurveyFeedbackQuestionOptions);
             surveyUsers.CompletedDatetime = DateTime.UtcNow;
             _dBContext.Update(surveyUsers);
             _dBContext.SaveChanges();
@@ -425,11 +425,11 @@ namespace freepoll.Controllers
 
             List<int> pollIdsFilteredList = filteredUserSurveysList.Select(x => x.surveyId).ToList();
 
-            List<SurveyUser> surveyUsers = (from eachSurvey in _dBContext.SurveyUser
-                                         where pollIdsFilteredList.Contains(eachSurvey.SurveyId)
+            List<SurveyFeedback> surveyFeedback = (from eachSurvey in _dBContext.SurveyFeedback
+                                                where pollIdsFilteredList.Contains(eachSurvey.SurveyId)
                                          select eachSurvey).ToList();
 
-            var surveyFeedbacksReceived = (from eachSurvey in surveyUsers
+            var surveyFeedbacksReceived = (from eachSurvey in surveyFeedback
                                            group new { eachSurvey.SurveyId } by new { eachSurvey.CompletedDatetime , eachSurvey.SurveyId } into eachGroup
                                            select eachGroup).ToList();
 
@@ -494,16 +494,16 @@ namespace freepoll.Controllers
 
             if (survey == null) return BadRequest(Messages.SurveyNotFoundError);
 
-            SurveyUser surveyUser = _dBContext.SurveyUser.Where(x => x.SurveyId == surveyId && x.SurveyUserId == surveyFeedbackViewModel.FeedbackId).FirstOrDefault();
+            SurveyFeedback surveyFeedback = _dBContext.SurveyFeedback.Where(x => x.SurveyId == surveyId && x.SurveyFeedbackId == surveyFeedbackViewModel.FeedbackId).FirstOrDefault();
 
-            if (surveyUser == null) return BadRequest(Messages.FeedbackNotFound);
+            if (surveyFeedback == null) return BadRequest(Messages.FeedbackNotFound);
 
-            surveyUser.ReviewComment = surveyFeedbackViewModel.Comment;
-            surveyUser.ReviewCompleted = Convert.ToBoolean(surveyFeedbackViewModel.reviewComplete) ? 1 : 0;
-            surveyUser.ReviewDatetime = DateTime.UtcNow;
-            _dBContext.SurveyUser.Update(surveyUser);
+            surveyFeedback.ReviewComment = surveyFeedbackViewModel.Comment;
+            surveyFeedback.ReviewCompleted = Convert.ToBoolean(surveyFeedbackViewModel.reviewComplete) ? 1 : 0;
+            surveyFeedback.ReviewDatetime = DateTime.UtcNow;
+            _dBContext.SurveyFeedback.Update(surveyFeedback);
             _dBContext.SaveChanges();
-            return Ok(surveyUser);
+            return Ok(surveyFeedback);
         }
 
         [Route("user/feedbacks/{surveyGuid}/pagenumber/{pagenum}/pagesize/{pagesize}")]
@@ -526,12 +526,12 @@ namespace freepoll.Controllers
             userFeedbackResponse.surveyTitle = survey.Welcometitle;
             userFeedbackResponse.surveyLogo = survey.Welcomeimage;
 
-            var userFeedbacks = from fb in _dBContext.SurveyUser
+            var userFeedbacks = from fb in _dBContext.SurveyFeedback
                                 where fb.SurveyId == survey.Surveyid && fb.CompletedDatetime != null
                                 orderby fb.InsertedDatetime descending
                                 select new Feedbacks()
                                 {
-                                    surveyUserId = fb.SurveyUserId,
+                                    surveyUserId = fb.SurveyFeedbackId,
                                     surveyUserGuid = fb.SurveyUserGuid,
                                     EmailId = fb.SurveyUserEmail,
                                     receivedDate = fb.CompletedDatetime,

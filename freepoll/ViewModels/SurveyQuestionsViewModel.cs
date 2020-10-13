@@ -25,6 +25,10 @@ namespace freepoll.ViewModels
         public DateTime? UpdatedDate { get; set; }
         public string UpdatedBy { get; set; }
 
+        public List<string> selectedValues { get; set; }
+
+        public string questiontype { get; set; }
+
         public List<SurveyQuestionOptions> ObjectOptions { get; set; }
         public Dictionary<string, object> Options { get; set; }
 

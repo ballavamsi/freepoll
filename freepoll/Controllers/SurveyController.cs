@@ -636,11 +636,11 @@ namespace freepoll.Controllers
 
             if (user == null) return BadRequest(Messages.UserNotFoundError);
 
-            SurveyUser surveyuser = _dBContext.SurveyUser.Where(x => x.SurveyUserGuid == surveyUserGuid).FirstOrDefault();
+            SurveyFeedback surveyFeedback = _dBContext.SurveyFeedback.Where(x => x.SurveyUserGuid == surveyUserGuid).FirstOrDefault();
 
-            if (surveyuser == null) return BadRequest(Messages.SurveyUserNotFoundError);
+            if (surveyFeedback == null) return BadRequest(Messages.SurveyUserNotFoundError);
 
-            Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyuser.SurveyId).FirstOrDefault();
+            Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyFeedback.SurveyId).FirstOrDefault();
 
             if (survey == null) return BadRequest(Messages.SurveyNotFoundError);
 
@@ -653,19 +653,19 @@ namespace freepoll.Controllers
             foreach (var item in surveyQuestions)
             {
                 SurveyQuestionsViewModel viewquestion = _mapper.Map<SurveyQuestionsViewModel>(item);
-                List<SurveyUserQuestionOptions> surveyuserquestionoptions = new List<SurveyUserQuestionOptions>();
+                List<SurveyFeedbackQuestionOptions> surveyFeedbackquestionoptions = new List<SurveyFeedbackQuestionOptions>();
                 List<string> selectedoptions = new List<string>();
                 string optiontypevalue = null;
                 List<SurveyQuestionOptions> options = new List<SurveyQuestionOptions>();
                 options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId).OrderBy(x => x.OptionKey).ToList();
-                surveyuserquestionoptions = _dBContext.SurveyUserQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId && x.SurveyUserId == surveyuser.SurveyUserId).ToList();
+                surveyFeedbackquestionoptions = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == item.SurveyQuestionId && x.SurveyFeedbackId == surveyFeedback.SurveyFeedbackId).ToList();
                 if (questiontypes != null)
                 {
                     optiontypevalue = questiontypes.FirstOrDefault(x => x.TypeId == item.TypeId).TypeValue;
                 }
-                if (surveyuserquestionoptions != null)
+                if (surveyFeedbackquestionoptions != null)
                 {
-                        foreach (var itemq in surveyuserquestionoptions)
+                        foreach (var itemq in surveyFeedbackquestionoptions)
                         {
                             string option = null;
                             option = itemq.SurveyQuestionOptionId;

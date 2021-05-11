@@ -19,7 +19,7 @@ namespace freepoll.Common
             public const string SurveyNotFoundError = "SurveyNotFound";
             public const string SurveyUserNotFoundError = "SurveyUserNotFound";
             public const string SurveyEnded = "SurveyEnded";
-            public const string SurveyAlreadyTaken = "";
+            public const string SurveyAlreadyTaken = "SurveyAlreadyTaken";
             public const string SurveyWasNotStartedByUser = "SurveyWasNotStartedByUser";
             public const string SurveyWasAlreadySubmitted = "SurveyWasAlreadySubmitted";
             public const string FeedbackNotFound = "FeedbackNotFound";

@@ -202,7 +202,11 @@ namespace freepoll.Controllers
             if (sur.Enddate < DateTime.UtcNow)
                 return BadRequest(Messages.SurveyEnded);
 
-            bool checkSurveyEmail = _dBContext.SurveyFeedback.Any(x => x.SurveyId == sur.Surveyid && x.SurveyUserEmail.ToLower().Equals(emailId));
+            var surveyRestart = _dBContext.SurveyFeedback.Where(x => x.SurveyId == sur.Surveyid && x.SurveyUserEmail.ToLower().Equals(emailId) && x.CompletedDatetime == null).FirstOrDefault();
+            if (surveyRestart != null)
+                return Ok(surveyRestart);
+
+            bool checkSurveyEmail = _dBContext.SurveyFeedback.Any(x => x.SurveyId == sur.Surveyid && x.SurveyUserEmail.ToLower().Equals(emailId) && x.CompletedDatetime != null);
             if (checkSurveyEmail && Convert.ToBoolean(sur.Emailidrequired) && !string.IsNullOrEmpty(emailId))
                 return BadRequest(Messages.SurveyAlreadyTaken);
 

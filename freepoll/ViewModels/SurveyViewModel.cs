@@ -1,4 +1,5 @@
 ﻿using freepoll.Helpers;
+using freepoll.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,5 +24,10 @@ namespace freepoll.ViewModels
         public int Enableprevious { get; set; }
         public string SurveyGuid { get; set; } = ShortUrl.GenerateShortUrl();
         public List<SurveyQuestionsViewModel> SurveyQuestions { get; set; }
+    }
+
+    public class SurveyUserFeedbackViewModel : SurveyViewModel
+    {
+        public List<SurveyFeedback> SurveyFeedbacks { get; set; }
     }
 }

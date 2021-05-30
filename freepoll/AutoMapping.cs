@@ -25,5 +25,8 @@ public class AutoMapping : Profile
         CreateMap<SurveyViewModel, Survey>();
         CreateMap<Survey, SurveyViewModel>();
 
+        CreateMap<SurveyUserFeedbackViewModel, SurveyViewModel>();
+        CreateMap<SurveyViewModel, SurveyUserFeedbackViewModel>();
+
     }
 }

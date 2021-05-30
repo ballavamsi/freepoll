@@ -631,6 +631,7 @@ namespace freepoll.Controllers
         [HttpGet]
         public IActionResult GetSurveyUserFeedback(string surveyUserGuid)
         {
+            SurveyUserFeedbackViewModel surveyUserFeedbackViewModel = new SurveyUserFeedbackViewModel();
             SurveyViewModel surview = new SurveyViewModel();
             string userguid = Request.Headers[Constants.UserToken];
             string decyrptstring = Security.Decrypt(userguid);
@@ -688,7 +689,10 @@ namespace freepoll.Controllers
                 viewquestions.Add(viewquestion);
             }
             surview.SurveyQuestions = viewquestions;
-            return Ok(surview);
+
+            surveyUserFeedbackViewModel = _mapper.Map < SurveyUserFeedbackViewModel>(surview);
+            surveyUserFeedbackViewModel.SurveyFeedbacks = new List<SurveyFeedback>() { surveyFeedback };
+            return Ok(surveyUserFeedbackViewModel);
         }
 
     }

@@ -109,8 +109,6 @@ namespace freepoll.Controllers
             poll = new Poll();
             poll = _dBContext.Poll.Where(x => x.PollGuid.Trim().Equals(guid.Trim())).FirstOrDefault();
 
-            poll.Enddate = DateTime.Now.Date.AddDays(1);
-
             if (poll == null)  return NotFound(Messages.PollNotFoundError);
             if (poll.Enddate <= DateTime.Now.Date.AddDays(1).AddSeconds(-1)) return BadRequest(Messages.PollEnded);
 

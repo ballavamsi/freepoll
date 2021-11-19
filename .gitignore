@@ -5,3 +5,5 @@
 .vs/freepoll/v16/.suo
 /.vs/freepoll/v16/TestStore/0/testlog.manifest
 /.vs/freepoll/v16/TestStore/0/000.testlog
+*.log
+actions-runner/_work/freepoll/freepoll/

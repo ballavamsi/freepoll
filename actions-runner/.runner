@@ -1,0 +1,9 @@
+﻿{
+  "agentId": 2,
+  "agentName": "VAMSI-PC",
+  "poolId": 1,
+  "poolName": "Default",
+  "serverUrl": "https://pipelines.actions.githubusercontent.com/nEGAMVXS1OpXVsR4x8AMC5LpmvXOMUa6WDzg4aZllDvWAS29UH",
+  "gitHubUrl": "https://github.com/ballavamsi/freepoll",
+  "workFolder": "_work"
+}

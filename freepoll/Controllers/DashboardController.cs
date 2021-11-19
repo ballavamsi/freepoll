@@ -8,6 +8,7 @@ using freepoll.Models;
 using freepoll.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using static freepoll.Common.ResponseMessages;
 
 namespace freepoll.Controllers
@@ -20,12 +21,14 @@ namespace freepoll.Controllers
         private readonly FreePollDBContext _dBContext;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMemoryCache _memoryCache;
 
-        public DashboardController(FreePollDBContext dBContext, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public DashboardController(FreePollDBContext dBContext, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache memoryCache)
         {
             _dBContext = dBContext;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _memoryCache = memoryCache;
         }
 
         [Route("tilemetrics")]
@@ -39,6 +42,11 @@ namespace freepoll.Controllers
             if (string.IsNullOrEmpty(decyrptstring)) return BadRequest("Unauthorized User");
             User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
             if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            if (_memoryCache.TryGetValue($"dashboard_{user.UserGuid}", out dashboardMetricsViewModel))
+                return Ok(dashboardMetricsViewModel);
+
+            dashboardMetricsViewModel = new DashboardMetricsViewModel();
 
             List<Poll> polls = _dBContext.Poll.Where(x => x.CreatedBy == user.Userid && x.StatusId != 3).ToList();
 
@@ -68,7 +76,7 @@ namespace freepoll.Controllers
 
             //Update total Surveys Feedbacks
             dashboardMetricsViewModel.surveyFeedbacks = surveyUsers.Count;
-
+            _memoryCache.Set($"dashboard_{user.UserGuid}", dashboardMetricsViewModel);
             return Ok(dashboardMetricsViewModel);
         }
     }

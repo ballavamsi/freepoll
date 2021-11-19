@@ -10,6 +10,7 @@ using freepoll.Helpers;
 using freepoll.Common;
 using static freepoll.Common.ResponseMessages;
 using freepoll.UserModels;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace freepoll.Controllers
 {
@@ -20,11 +21,13 @@ namespace freepoll.Controllers
         private readonly FreePollDBContext _dBContext;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public SurveyController(FreePollDBContext dBContext, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        private readonly IMemoryCache _memoryCache;
+        public SurveyController(FreePollDBContext dBContext, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache memoryCache)
         {
             _dBContext = dBContext;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _memoryCache = memoryCache;
         }
 
         [Route("add")]
@@ -553,6 +556,75 @@ namespace freepoll.Controllers
             userFeedbackResponse.total = total;
 
             return Ok(userFeedbackResponse);
+        }
+
+        [Route("user/graphmetrics/{surveyGuid}/{surveyQuestionId}")]
+        [HttpGet]
+        public IActionResult UserSurveyReports(string surveyGuid,int surveyQuestionId)
+        {
+            SurveyMetrics metric = new SurveyMetrics(_dBContext, _mapper);
+            string userguid = Request.Headers[Constants.UserToken];
+            string decyrptstring = Security.Decrypt(userguid);
+            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
+
+            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
+
+            if (user == null) return BadRequest(Messages.UserNotFoundError);
+
+            Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.SurveyGuid == surveyGuid).FirstOrDefault();
+
+            if (survey == null) return BadRequest(Messages.SurveyNotFoundError);
+
+            SurveyQuestions surveyQuestion = _dBContext.SurveyQuestions.Where(x => x.StatusId != (int)EnumStatus.Deleted && x.SurveyId == survey.Surveyid && x.SurveyQuestionId == surveyQuestionId).ToList().FirstOrDefault();
+
+            List<QuestionType> questionType = _dBContext.QuestionType.ToList();
+
+            SurveyMetricViewModel surveyMetric = new SurveyMetricViewModel();
+            List<QuestionMetricViewModel> questionMetrics = new List<QuestionMetricViewModel>();
+            QuestionMetricViewModel questionMetric = new QuestionMetricViewModel();
+            var type = questionType.Where(x => x.TypeId == surveyQuestion.TypeId).Select(x => x.TypeCode).FirstOrDefault();
+            switch (type)
+            {
+                case "radiobuttons":
+                    questionMetric = metric.forCountAndAverage(surveyQuestion.SurveyQuestionId);
+                    break;
+                case "multiple":
+                    questionMetric = metric.forCountAndAverage(surveyQuestion.SurveyQuestionId);
+                    break;
+                case "imageradiobuttons":
+                    questionMetric = metric.forCountAndAverage(surveyQuestion.SurveyQuestionId);
+                    break;
+                case "imagemultiple":
+                    questionMetric = metric.forCountAndAverage(surveyQuestion.SurveyQuestionId);
+                    break;
+                case "slider":
+                    questionMetric = metric.forSliderAverage(surveyQuestion.SurveyQuestionId);
+                    break;
+                case "rangeslider":
+                    questionMetric = metric.forSliderAverage(surveyQuestion.SurveyQuestionId);
+                    break;
+                case "starrating":
+                    questionMetric = metric.forStarRatingAverage(surveyQuestion.SurveyQuestionId);
+                    break;
+                case "multiplerating":
+                    questionMetric = metric.forMultipleStarRatings(surveyQuestion.SurveyQuestionId);
+                    break;
+                case "customrating":
+                    questionMetric = metric.forCustomRatings(surveyQuestion.SurveyQuestionId);
+                    break;
+                default:
+                    break;
+            }
+            questionMetric.QuestionType = type;
+            questionMetric.originalQuestionOptions = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == surveyQuestion.SurveyQuestionId).ToList();
+
+            questionMetrics.Add(questionMetric);
+
+            surveyMetric.Title = survey.Welcometitle;
+            surveyMetric.Description = survey.Welcomedescription;
+            surveyMetric.logo = survey.Welcomeimage;
+            surveyMetric.Questions = questionMetrics;
+            return Ok(surveyMetric);
         }
 
         [Route("user/graphmetrics/{surveyGuid}")]

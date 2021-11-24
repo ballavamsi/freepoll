@@ -34,18 +34,15 @@ namespace freepoll.Controllers
             _memoryCache = memoryCache;
         }
 
-
         [Route("add")]
         [HttpPost]
-        public IActionResult AddNewPoll([FromBody]NewPollViewModel newPoll)
+        public IActionResult AddNewPoll([FromBody] NewPollViewModel newPoll)
         {
             string userId = Request.Headers[Constants.UserToken];
-            string decyrptstring = Security.Decrypt(userId);
-            if (decyrptstring == null) return BadRequest();
 
-            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
-
-            if (user == null) return BadRequest(Messages.UserNotFoundError);
+            User user;
+            _memoryCache.TryGetValue(userId, out user);
+            if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
             Poll p = _mapper.Map<Poll>(newPoll);
             p.CreatedDate = DateTime.UtcNow;
@@ -76,9 +73,18 @@ namespace freepoll.Controllers
             PollViewModel pCache = _mapper.Map<PollViewModel>(p);
             pCache.PollOptions = lstPollOptions;
 
-            _memoryCache.Set("poll_guid_"+p.PollGuid.ToString(), pCache);
-            _memoryCache.Set("poll_id"+p.PollId.ToString(), pCache);
-            _memoryCache.Remove($"poll_userpoll_userid_{user.UserGuid}_pagenum_0_pagesize_10");
+            _memoryCache.Set($"poll_guid_{p.PollGuid}", pCache);
+            _memoryCache.Set($"poll_id_{p.PollId}", pCache);
+            _memoryCache.Remove($"poll_userpoll_userid_{user.UserGuid}");
+
+            DashboardMetricsViewModel dashboardMetricsViewModel;
+            _memoryCache.TryGetValue($"dashboard_{user.UserGuid}", out dashboardMetricsViewModel);
+            if (dashboardMetricsViewModel != null)
+            {
+                dashboardMetricsViewModel.polls += 1;
+                _memoryCache.Set($"dashboard_{user.UserGuid}", dashboardMetricsViewModel);
+            }
+
             return GetPoll(p.PollId);
         }
 
@@ -86,13 +92,12 @@ namespace freepoll.Controllers
         [HttpGet]
         public IActionResult GetPoll(int id)
         {
-            Poll poll = new Poll();
-            if (_memoryCache.TryGetValue("poll_id" + id.ToString(), out poll))
-                return Ok(poll);
-            poll = new Poll();
+            PollViewModel pollView = new PollViewModel();
+            if (_memoryCache.TryGetValue($"poll_id_{id}", out pollView))
+                return Ok(pollView);
 
-            poll = _dBContext.Poll.Where(x => x.PollId == id).FirstOrDefault();
-            PollViewModel pollView = _mapper.Map<PollViewModel>(poll);
+            Poll poll = _dBContext.Poll.Where(x => x.PollId == id).FirstOrDefault();
+            pollView = _mapper.Map<PollViewModel>(poll);
             List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == id).ToList();
             pollView.PollOptions = options;
             return Ok(pollView);
@@ -102,17 +107,16 @@ namespace freepoll.Controllers
         [HttpGet]
         public IActionResult GetPollByGuid(string guid)
         {
-            Poll poll = new Poll();
-            if (_memoryCache.TryGetValue("poll_guid" + guid.ToString(), out poll))
-                return Ok(poll);
+            PollViewModel pollView = new PollViewModel();
+            if (_memoryCache.TryGetValue("poll_guid" + guid.ToString(), out pollView))
+                return Ok(pollView);
 
-            poll = new Poll();
-            poll = _dBContext.Poll.Where(x => x.PollGuid.Trim().Equals(guid.Trim())).FirstOrDefault();
+            Poll poll = _dBContext.Poll.Where(x => x.PollGuid.Trim().Equals(guid.Trim())).FirstOrDefault();
 
-            if (poll == null)  return NotFound(Messages.PollNotFoundError);
+            if (poll == null) return NotFound(Messages.PollNotFoundError);
             if (poll.Enddate <= DateTime.Now.Date.AddDays(1).AddSeconds(-1)) return BadRequest(Messages.PollEnded);
 
-            PollViewModel pollView = _mapper.Map<PollViewModel>(poll);
+            pollView = _mapper.Map<PollViewModel>(poll);
 
             List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == poll.PollId).ToList();
             pollView.PollOptions = options;
@@ -121,7 +125,7 @@ namespace freepoll.Controllers
 
         [Route("vote")]
         [HttpPost]
-        public IActionResult VotePoll([FromBody]PollVoteRequestViewModel newPoll)
+        public IActionResult VotePoll([FromBody] PollVoteRequestViewModel newPoll)
         {
             var poll = _dBContext.Poll.Where(x => x.PollId == newPoll.pollId).FirstOrDefault();
 
@@ -130,7 +134,7 @@ namespace freepoll.Controllers
 
             IPLocation userLocationDetails = LocationHelper.GetIpAndLocation(_httpContextAccessor);
 
-            if(poll.Duplicate == 0)
+            if (poll.Duplicate == 0)
             {
                 var voted = _dBContext.PollVotes.Where(x => x.IpAddress == userLocationDetails.IP && x.UserLocation == userLocationDetails.Region).Any();
                 if (voted) return BadRequest(Messages.PollVoted);
@@ -166,7 +170,6 @@ namespace freepoll.Controllers
             List<PollVotes> votes = _dBContext.PollVotes.Where(x => x.PollId == poll.PollId).ToList();
             List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == poll.PollId).ToList();
 
-
             List<PollVoteOptionResponseViewModel> lstResponse = new List<PollVoteOptionResponseViewModel>();
             foreach (var item in options)
             {
@@ -193,24 +196,20 @@ namespace freepoll.Controllers
             return Ok(dynamicData);
         }
 
-
-
         [Route("user/pagenumber/{pagenum}/pagesize/{pagesize}")]
         [HttpGet]
         public IActionResult UserPoll(int pagenum, int pagesize)
         {
+            string userId = Request.Headers[Constants.UserToken];
 
-            string userguid = Request.Headers[Constants.UserToken];
+            User user;
+            _memoryCache.TryGetValue(userId, out user);
+            if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
             List<UserPoll> filteredUserPollsList = new List<UserPoll>();
             UserPollResponse userpollres = new UserPollResponse();
 
-            string decyrptstring = Security.Decrypt(userguid);
-            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest("Unauthorized User");
-            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
-            if (user == null) return BadRequest(Messages.UserNotFoundError);
-
-            if (_memoryCache.TryGetValue($"poll_userpoll_userid_{user.UserGuid}_pagenum_{pagenum}_pagesize_{pagesize}", out userpollres))
+            if (_memoryCache.TryGetValue($"poll_userpoll_userid_{user.UserGuid}", out userpollres))
                 return Ok(userpollres);
 
             userpollres = new UserPollResponse();
@@ -238,12 +237,12 @@ namespace freepoll.Controllers
             List<int> pollIdsFilteredList = filteredUserPollsList.Select(x => x.pollId).ToList();
 
             List<PollVotes> pollVotes = (from eachPoll in _dBContext.PollVotes
-                                        where pollIdsFilteredList.Contains(eachPoll.PollId)
-                                        select eachPoll).ToList();
+                                         where pollIdsFilteredList.Contains(eachPoll.PollId)
+                                         select eachPoll).ToList();
 
             var pollVotesReceived = (from eachPoll in pollVotes
-                                    group new { eachPoll.PollId } by new { eachPoll.CreatedDate, eachPoll.PollId } into eachGroup
-                                    select eachGroup).ToList();
+                                     group new { eachPoll.PollId } by new { eachPoll.CreatedDate, eachPoll.PollId } into eachGroup
+                                     select eachGroup).ToList();
 
             //Update only finaly display values
             for (int i = 0; i < filteredUserPollsList.Count(); i++)
@@ -259,25 +258,20 @@ namespace freepoll.Controllers
             return Ok(userpollres);
         }
 
-
         [Route("delete/{pollId}")]
         [HttpDelete]
         public IActionResult UserPollDelete(int pollId)
         {
             UserPollResponse response = new UserPollResponse();
 
-            string userguid = Request.Headers[Constants.UserToken];
-            string decyrptstring = Security.Decrypt(userguid);
-            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
+            string userId = Request.Headers[Constants.UserToken];
 
-            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
-
-            if (user == null) return BadRequest(Messages.UserNotFoundError);
+            User user;
+            _memoryCache.TryGetValue(userId, out user);
+            if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
             Poll poll = _dBContext.Poll.Where(x => x.CreatedBy == user.Userid && x.PollId == pollId).FirstOrDefault();
-
             if (poll == null) return BadRequest(Messages.PollNotFoundError);
-
             poll.StatusId = 3;
 
             int result = _dBContext.SaveChanges();
@@ -286,10 +280,28 @@ namespace freepoll.Controllers
             {
                 response.Response = Messages.PollDeleteSuccess;
             }
+
+            UserPollResponse userpollres = new UserPollResponse();
+            _memoryCache.TryGetValue($"poll_userpoll_userid_{user.UserGuid}", out userpollres);
+
+            if (userpollres != null)
+            {
+                var pollToDelete = userpollres.userPolls.Where(x => x.pollId == poll.PollId).FirstOrDefault();
+                userpollres.userPolls.Remove(pollToDelete);
+                userpollres.totalPolls = (userpollres.totalPolls - 1) >= 0 ? (userpollres.totalPolls - 1) : 0;
+            }
+
+            DashboardMetricsViewModel dashboardMetricsViewModel;
+            _memoryCache.TryGetValue($"dashboard_{user.UserGuid}", out dashboardMetricsViewModel);
+            if (dashboardMetricsViewModel != null)
+            {
+                dashboardMetricsViewModel.polls = (dashboardMetricsViewModel.polls - 1) > 0 ? (dashboardMetricsViewModel.polls - 1) : 0;
+                _memoryCache.Set($"dashboard_{user.UserGuid}", dashboardMetricsViewModel);
+            }
             return Ok(response);
         }
 
-        //Mapper.CreateMap<Employee, User>(); //Creates the map and all fields are copied if properties are same   
+        //Mapper.CreateMap<Employee, User>(); //Creates the map and all fields are copied if properties are same
 
         ////If properties are different we need to map fields of employee to that of user as below.
         //AutoMapper.Mapper.CreateMap<Employee, User>()

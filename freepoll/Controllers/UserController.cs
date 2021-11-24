@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using freepoll.Common;
 using static freepoll.Common.ResponseMessages;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace freepoll.Controllers
 {
@@ -18,11 +19,14 @@ namespace freepoll.Controllers
         private readonly FreePollDBContext _dBContext;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public UserController(FreePollDBContext dBContext, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        private readonly IMemoryCache _memoryCache;
+
+        public UserController(FreePollDBContext dBContext, IMapper mapper, IHttpContextAccessor httpContextAccessor, IMemoryCache memoryCache)
         {
             _dBContext = dBContext;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _memoryCache = memoryCache;
         }
 
         //[Route("register")]
@@ -72,7 +76,7 @@ namespace freepoll.Controllers
 
         [Route("login")]
         [HttpPost]
-        public IActionResult UserLogin([FromBody]LoginViewModel logindetails)
+        public IActionResult UserLogin([FromBody] LoginViewModel logindetails)
         {
             User user = new User();
             UserResponseViewModel userResponseViewModel = new UserResponseViewModel();
@@ -82,9 +86,7 @@ namespace freepoll.Controllers
 
             user = users.Where(x => x.Email == logindetails.email.ToLower()).FirstOrDefault();
 
-            
-
-            if(user == null)
+            if (user == null)
             {
                 user = new User();
                 user.Name = logindetails.name;
@@ -105,7 +107,7 @@ namespace freepoll.Controllers
             if (user.Status == 0)
                 return BadRequest(Messages.Inactiveusererror);
 
-            if(logindetails.platformdetail.platform.ToLower() == "google" && string.IsNullOrEmpty(user.Google))
+            if (logindetails.platformdetail.platform.ToLower() == "google" && string.IsNullOrEmpty(user.Google))
             {
                 user.Google = logindetails.platformdetail.platformid;
                 _dBContext.User.Update(user);
@@ -130,10 +132,11 @@ namespace freepoll.Controllers
             {
                 userResponseViewModel.profileUrl = user.PhotoUrl;
                 userResponseViewModel.userName = user.Name;
-                userResponseViewModel.userEmail = user.Email;             
+                userResponseViewModel.userEmail = user.Email;
                 string encryptedString = Security.Encrypt(user.UserGuid);
                 userResponseViewModel.UserGuid = encryptedString;
 
+                _memoryCache.Set(encryptedString, user);
             }
             else
             {

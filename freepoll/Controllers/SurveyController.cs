@@ -35,12 +35,9 @@ namespace freepoll.Controllers
         public IActionResult AddNewSurvey([FromBody] SurveyViewModel newSurvey)
         {
             string userId = Request.Headers[Constants.UserToken];
-            string decyrptstring = Security.Decrypt(userId);
-            if (decyrptstring == null) return BadRequest();
-
-            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
-
-            if (user == null) return BadRequest(Messages.UserNotFoundError);
+            User user;
+            _memoryCache.TryGetValue(userId, out user);
+            if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
             int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
             
@@ -398,18 +395,14 @@ namespace freepoll.Controllers
         [HttpGet]
         public IActionResult UserSurvey(int pagenum, int pagesize)
         {
-            string userguid = Request.Headers[Constants.UserToken];
+            string userId = Request.Headers[Constants.UserToken];
 
             List<UserSurvey> filteredUserSurveysList = new List<UserSurvey>();
             UserSurveyResponse usersurveyres = new UserSurveyResponse();
 
-            string decyrptstring = Security.Decrypt(userguid);
-
-            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest("Unauthorized User");
-
-            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
-
-            if (user == null) return BadRequest(Messages.UserNotFoundError);
+            User user;
+            _memoryCache.TryGetValue(userId, out user);
+            if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
             List<Status> statuses = _dBContext.Status.ToList();
 
@@ -460,13 +453,10 @@ namespace freepoll.Controllers
         {
             UserSurveyResponse response = new UserSurveyResponse();
 
-            string userguid = Request.Headers[Constants.UserToken];
-            string decyrptstring = Security.Decrypt(userguid);
-            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
-
-            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
-
-            if (user == null) return BadRequest(Messages.UserNotFoundError);
+            string userId = Request.Headers[Constants.UserToken];
+            User user;
+            _memoryCache.TryGetValue(userId, out user);
+            if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
             Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyId).FirstOrDefault();
 
@@ -489,13 +479,10 @@ namespace freepoll.Controllers
         public IActionResult UpdateFeedbackComment(int surveyId, SurveyFeedbackViewModel surveyFeedbackViewModel)
         {
             UserFeedbackResponse userFeedbackResponse = new UserFeedbackResponse();
-            string userguid = Request.Headers[Constants.UserToken];
-            string decyrptstring = Security.Decrypt(userguid);
-            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
-
-            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
-
-            if (user == null) return BadRequest(Messages.UserNotFoundError);
+            string userId = Request.Headers[Constants.UserToken];
+            User user;
+            _memoryCache.TryGetValue(userId, out user);
+            if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
             Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.Surveyid == surveyId).FirstOrDefault();
 
@@ -518,13 +505,10 @@ namespace freepoll.Controllers
         public IActionResult GetFeedbacks(string surveyGuid, int pagenum,int pagesize)
         {
             UserFeedbackResponse userFeedbackResponse = new UserFeedbackResponse();
-            string userguid = Request.Headers[Constants.UserToken];
-            string decyrptstring = Security.Decrypt(userguid);
-            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
-
-            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
-
-            if (user == null) return BadRequest(Messages.UserNotFoundError);
+            string userId = Request.Headers[Constants.UserToken];
+            User user;
+            _memoryCache.TryGetValue(userId, out user);
+            if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
             Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.SurveyGuid == surveyGuid).FirstOrDefault();
 
@@ -563,13 +547,10 @@ namespace freepoll.Controllers
         public IActionResult UserSurveyReports(string surveyGuid,int surveyQuestionId)
         {
             SurveyMetrics metric = new SurveyMetrics(_dBContext, _mapper);
-            string userguid = Request.Headers[Constants.UserToken];
-            string decyrptstring = Security.Decrypt(userguid);
-            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
-
-            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
-
-            if (user == null) return BadRequest(Messages.UserNotFoundError);
+            string userId = Request.Headers[Constants.UserToken];
+            User user;
+            _memoryCache.TryGetValue(userId, out user);
+            if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
             Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.SurveyGuid == surveyGuid).FirstOrDefault();
 
@@ -632,13 +613,10 @@ namespace freepoll.Controllers
         public IActionResult UserSurveyReports(string surveyGuid)
         {
             SurveyMetrics metric = new SurveyMetrics(_dBContext, _mapper);
-            string userguid = Request.Headers[Constants.UserToken];
-            string decyrptstring = Security.Decrypt(userguid);
-            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
-
-            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
-
-            if (user == null) return BadRequest(Messages.UserNotFoundError);
+            string userId = Request.Headers[Constants.UserToken];
+            User user;
+            _memoryCache.TryGetValue(userId, out user);
+            if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
             Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.SurveyGuid == surveyGuid).FirstOrDefault();
 
@@ -705,13 +683,10 @@ namespace freepoll.Controllers
         {
             SurveyUserFeedbackViewModel surveyUserFeedbackViewModel = new SurveyUserFeedbackViewModel();
             SurveyViewModel surview = new SurveyViewModel();
-            string userguid = Request.Headers[Constants.UserToken];
-            string decyrptstring = Security.Decrypt(userguid);
-            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest(Messages.UnauthorizedUserError);
-
-            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
-
-            if (user == null) return BadRequest(Messages.UserNotFoundError);
+            string userId = Request.Headers[Constants.UserToken];
+            User user;
+            _memoryCache.TryGetValue(userId, out user);
+            if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
             SurveyFeedback surveyFeedback = _dBContext.SurveyFeedback.Where(x => x.SurveyUserGuid == surveyUserGuid).FirstOrDefault();
 

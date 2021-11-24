@@ -37,11 +37,10 @@ namespace freepoll.Controllers
         {
             DashboardMetricsViewModel dashboardMetricsViewModel = new DashboardMetricsViewModel();
 
-            string userguid = Request.Headers[Constants.UserToken];
-            string decyrptstring = Security.Decrypt(userguid);
-            if (string.IsNullOrEmpty(decyrptstring)) return BadRequest("Unauthorized User");
-            User user = _dBContext.User.Where(x => x.UserGuid == decyrptstring).FirstOrDefault();
-            if (user == null) return BadRequest(Messages.UserNotFoundError);
+            string userId = Request.Headers[Constants.UserToken];
+            User user;
+            _memoryCache.TryGetValue(userId, out user);
+            if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
             if (_memoryCache.TryGetValue($"dashboard_{user.UserGuid}", out dashboardMetricsViewModel))
                 return Ok(dashboardMetricsViewModel);

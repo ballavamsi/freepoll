@@ -108,7 +108,7 @@ namespace freepoll.Controllers
         public IActionResult GetPollByGuid(string guid)
         {
             PollViewModel pollView = new PollViewModel();
-            if (_memoryCache.TryGetValue("poll_guid" + guid.ToString(), out pollView))
+            if (_memoryCache.TryGetValue("poll_guid_" + guid.ToString(), out pollView))
                 return Ok(pollView);
 
             Poll poll = _dBContext.Poll.Where(x => x.PollGuid.Trim().Equals(guid.Trim())).FirstOrDefault();
@@ -281,9 +281,11 @@ namespace freepoll.Controllers
                 response.Response = Messages.PollDeleteSuccess;
             }
 
+            _memoryCache.Remove("poll_guid_" + poll.PollGuid);
+            _memoryCache.Remove("poll_id_" + poll.PollId);
+
             UserPollResponse userpollres = new UserPollResponse();
             _memoryCache.TryGetValue($"poll_userpoll_userid_{user.UserGuid}", out userpollres);
-
             if (userpollres != null)
             {
                 var pollToDelete = userpollres.userPolls.Where(x => x.pollId == poll.PollId).FirstOrDefault();

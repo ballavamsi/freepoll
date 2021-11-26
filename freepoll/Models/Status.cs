@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
-// Code scaffolded by EF Core assumes nullable reference types (NRTs) are not used or disabled.
-// If you have enabled NRTs for your project, then un-comment the following line:
-// #nullable disable
-
-namespace freepoll.Models
+﻿namespace freepoll.Models
 {
     public partial class Status
     {
-        public int? Statusid { get; set; }
+        public int Statusid { get; set; }
         public string Statusname { get; set; }
     }
 }

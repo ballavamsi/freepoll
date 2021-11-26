@@ -226,7 +226,7 @@ namespace freepoll.Controllers
                            {
                                pollId = poll.PollId,
                                pollGuid = poll.PollGuid,
-                               date = Convert.ToDateTime(poll.CreatedDate),
+                               date = poll.CreatedDate,
                                pollName = poll.Name,
                                status = poll.StatusId.ToString(),
                                votes = 0
@@ -240,7 +240,7 @@ namespace freepoll.Controllers
             List<int> pollIdsFilteredList = filteredUserPollsList.Select(x => x.pollId).ToList();
 
             List<PollVotes> pollVotes = (from eachPoll in _dBContext.PollVotes
-                                         where pollIdsFilteredList.Contains(Convert.ToInt32(eachPoll.PollId))
+                                         where pollIdsFilteredList.Contains(eachPoll.PollId)
                                          select eachPoll).ToList();
 
             var pollVotesReceived = (from eachPoll in pollVotes

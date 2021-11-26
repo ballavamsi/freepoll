@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using freepoll.Common;
+﻿using freepoll.Common;
 using freepoll.Models;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace freepoll.Controllers
 {
@@ -62,7 +61,6 @@ namespace freepoll.Controllers
             {
                 return Ok(ex.Message);
             }
-
         }
 
         [Route("encrypttest")]

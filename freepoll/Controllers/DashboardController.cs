@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using freepoll.Common;
 using freepoll.Models;
 using freepoll.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using System.Collections.Generic;
+using System.Linq;
 using static freepoll.Common.ResponseMessages;
 
 namespace freepoll.Controllers
@@ -17,7 +15,6 @@ namespace freepoll.Controllers
     [ApiController]
     public class DashboardController : ControllerBase
     {
-
         private readonly FreePollDBContext _dBContext;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -70,8 +67,8 @@ namespace freepoll.Controllers
 
             List<int> surveyIds = surveys.Select(x => x.Surveyid).ToList();
             List<SurveyFeedback> surveyUsers = (from eachSurvey in _dBContext.SurveyFeedback
-                                            where surveyIds.Contains(eachSurvey.SurveyId) && eachSurvey.CompletedDatetime != null
-                                            select eachSurvey).ToList();
+                                                where surveyIds.Contains(eachSurvey.SurveyId) && eachSurvey.CompletedDatetime != null
+                                                select eachSurvey).ToList();
 
             //Update total Surveys Feedbacks
             dashboardMetricsViewModel.surveyFeedbacks = surveyUsers.Count;

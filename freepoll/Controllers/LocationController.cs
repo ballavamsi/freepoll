@@ -8,8 +8,8 @@ namespace freepoll.Controllers
     [Route("api/location")]
     public class LocationController : Controller
     {
-
         private readonly IHttpContextAccessor _httpContextAccessor;
+
         public LocationController(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
@@ -20,6 +20,5 @@ namespace freepoll.Controllers
         {
             return LocationHelper.GetIpAndLocation(_httpContextAccessor);
         }
-
     }
 }

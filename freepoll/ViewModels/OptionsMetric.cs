@@ -1,11 +1,15 @@
 ﻿using freepoll.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace freepoll.ViewModels
 {
+    public class SurveySingleMetricViewModel
+    {
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string logo { get; set; }
+        public QuestionMetricViewModel Question { get; set; }
+    }
 
     public class SurveyMetricViewModel
     {
@@ -14,6 +18,7 @@ namespace freepoll.ViewModels
         public string logo { get; set; }
         public List<QuestionMetricViewModel> Questions { get; set; }
     }
+
     public class QuestionMetricViewModel
     {
         public string Question { get; set; }
@@ -22,7 +27,6 @@ namespace freepoll.ViewModels
         public List<OptionsMetric> options { get; set; }
         public List<SurveyQuestionOptions> originalQuestionOptions { get; set; }
     }
-
 
     public class OptionsMetric
     {

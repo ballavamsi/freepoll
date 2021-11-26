@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace freepoll.ViewModels
 {
@@ -10,7 +7,7 @@ namespace freepoll.ViewModels
         public string key { get; set; }
         public string text { get; set; }
         public int number { get; set; }
-        public List<string> selected { get; set; } 
+        public List<string> selected { get; set; }
     }
 
     public class QuestionAnswersRequestViewModel

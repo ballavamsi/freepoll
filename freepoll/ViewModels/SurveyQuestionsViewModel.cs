@@ -1,8 +1,6 @@
 ﻿using freepoll.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace freepoll.ViewModels
 {
@@ -11,7 +9,6 @@ namespace freepoll.ViewModels
     /// </summary>
     public class SurveyQuestionsViewModel
     {
-
         public int SurveyQuestionId { get; set; }
         public int SurveyId { get; set; }
         public int TypeId { get; set; }
@@ -31,6 +28,5 @@ namespace freepoll.ViewModels
 
         public List<SurveyQuestionOptions> ObjectOptions { get; set; }
         public Dictionary<string, object> Options { get; set; }
-
     }
 }

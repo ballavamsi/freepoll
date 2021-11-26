@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace freepoll.ViewModels
 {
-
     public class UserResponseViewModel
     {
         public string UserGuid { get; set; }
@@ -15,14 +12,11 @@ namespace freepoll.ViewModels
         public string Response { get; set; }
     }
 
-
     public class LoginViewModel
     {
         public string email { get; set; }
         public string name { get; set; }
         public Social platformdetail { get; set; }
-
-
     }
 
     public class Social
@@ -52,7 +46,6 @@ namespace freepoll.ViewModels
         public string Response { get; set; }
     }
 
-
     public class UserSurvey
     {
         public int surveyId { get; set; }
@@ -73,7 +66,6 @@ namespace freepoll.ViewModels
         public string Response { get; set; }
     }
 
-
     public class Feedbacks
     {
         public int surveyUserId { get; set; }
@@ -90,6 +82,7 @@ namespace freepoll.ViewModels
         public string surveyTitle { get; set; }
         public string surveyLogo { get; set; }
         public List<Feedbacks> feedbacks { get; set; }
+        public List<int> questions { get; set; }
         public int total { get; set; }
     }
 }

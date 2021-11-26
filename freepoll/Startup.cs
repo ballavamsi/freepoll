@@ -1,27 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 using freepoll.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
-using MySql.Data.EntityFrameworkCore.Extensions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Controllers;
-using freepoll.Controllers;
-using AutoMapper;
+using System;
+using System.IO;
+using System.Reflection;
 
 namespace freepoll
 {
@@ -51,11 +39,12 @@ namespace freepoll
             });
 
             var connstring = Environment.GetEnvironmentVariable("FREEPOLLMYSQL");
-            services.AddDbContext<FreePollDBContext>(options => {
+            services.AddDbContext<FreePollDBContext>(options =>
+            {
                 options.UseMySQL(connstring);
             });
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddAutoMapper(typeof(Startup)); 
+            services.AddAutoMapper(typeof(Startup));
             services.AddMemoryCache();
         }
 

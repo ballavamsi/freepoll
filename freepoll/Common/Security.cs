@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace freepoll.Common
 {
     public static class Security
     {
-
         public static string Encrypt(string encryptString)
         {
             string EncryptionKey = Environment.GetEnvironmentVariable("FREEPOLL_SECURITY_KEY");
@@ -38,9 +34,9 @@ namespace freepoll.Common
         public static string Decrypt(string cipherText)
         {
             var isLocal = false;
-            if(isLocal)
+            if (isLocal)
             {
-                return "a64afc20-d22d-4e99-8f60-c04211e486c2";            
+                return "a64afc20-d22d-4e99-8f60-c04211e486c2";
             }
             try
             {
@@ -72,7 +68,5 @@ namespace freepoll.Common
             }
             return cipherText;
         }
-
-
     }
 }

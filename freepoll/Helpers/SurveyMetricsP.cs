@@ -1,17 +1,13 @@
 ﻿using freepoll.UserModels;
 using freepoll.ViewModels;
-using Google.Protobuf.WellKnownTypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Ubiety.Dns.Core;
 
 namespace freepoll.Helpers
 {
     public partial class SurveyMetrics
     {
-
         /// <summary>
         /// Can be used for Radio button, checkboxes,
         /// Image radio buttons and checkboxes
@@ -39,8 +35,7 @@ namespace freepoll.Helpers
                 optionsMetrics.Add(optionsMetric);
             }
 
-
-            if(total != count)
+            if (total != count)
             {
                 OptionsMetric tempOptionsMetric = new OptionsMetric();
                 tempOptionsMetric.optionId = 0;
@@ -68,7 +63,7 @@ namespace freepoll.Helpers
             var options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == questionId).ToList();
             var total = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == questionId).Count();
 
-            var minValue = Convert.ToInt32(options.Where(x => x.OptionKey == "min").Select(x=>x.OptionValue).FirstOrDefault());
+            var minValue = Convert.ToInt32(options.Where(x => x.OptionKey == "min").Select(x => x.OptionValue).FirstOrDefault());
             var maxValue = Convert.ToInt32(options.Where(x => x.OptionKey == "max").Select(x => x.OptionValue).FirstOrDefault());
 
             var userSelected = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == questionId && !string.IsNullOrEmpty(x.SurveyQuestionOptionId)).ToList();
@@ -111,7 +106,7 @@ namespace freepoll.Helpers
             tempOptionsMetric.optionId = 0;
             tempOptionsMetric.optionText = "Average Rating";
             tempOptionsMetric.optionCount = userSelected.Count();
-            tempOptionsMetric.optionAverage = userSelected.Where(x=>!string.IsNullOrEmpty(x)).Average(x=>Convert.ToInt32(x));
+            tempOptionsMetric.optionAverage = userSelected.Where(x => !string.IsNullOrEmpty(x)).Average(x => Convert.ToInt32(x));
             optionsMetrics.Add(tempOptionsMetric);
             questionMetric.options = optionsMetrics;
             return questionMetric;
@@ -149,8 +144,6 @@ namespace freepoll.Helpers
             return questionMetric;
         }
 
-
-
         /// <summary>
         /// For multiple star rating average
         /// </summary>
@@ -163,27 +156,27 @@ namespace freepoll.Helpers
             questionMetric.Question = question.Title;
             questionMetric.Explanation = question.Subtitle;
 
-            var options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == questionId).OrderBy(x=>x.OptionKey).ToList();
+            var options = _dBContext.SurveyQuestionOptions.Where(x => x.SurveyQuestionId == questionId).OrderBy(x => x.OptionKey).ToList();
             var feedbackOptions = _dBContext.SurveyFeedbackQuestionOptions.Where(x => x.SurveyQuestionId == questionId).ToList();
             var count = 0;
             List<OptionsMetric> optionsMetrics = new List<OptionsMetric>();
-            foreach (var item in options.Where(x=>x.OptionKey.StartsWith("value")))
+            foreach (var item in options.Where(x => x.OptionKey.StartsWith("value")))
             {
                 OptionsMetric optionsMetric = new OptionsMetric();
                 optionsMetric.optionId = item.SurveyQuestionOptionId;
                 optionsMetric.optionText = item.OptionValue;
 
                 List<OptionsMetric> subOptionsMetrics = new List<OptionsMetric>();
-                var currentOptionSelectedChoicesList = feedbackOptions.Where(x=>x.SurveyQuestionOptionId == item.SurveyQuestionOptionId.ToString());
+                var currentOptionSelectedChoicesList = feedbackOptions.Where(x => x.SurveyQuestionOptionId == item.SurveyQuestionOptionId.ToString());
 
                 foreach (var subitem in options.Where(x => x.OptionKey.StartsWith("x_value")))
                 {
-                    var userSelected = currentOptionSelectedChoicesList.Where(x=>x.CustomAnswer == subitem.SurveyQuestionOptionId.ToString()).Select(x => x.CustomAnswer).ToList();
+                    var userSelected = currentOptionSelectedChoicesList.Where(x => x.CustomAnswer == subitem.SurveyQuestionOptionId.ToString()).Select(x => x.CustomAnswer).ToList();
 
                     OptionsMetric subOptionsMetric = new OptionsMetric();
                     subOptionsMetric.optionId = subitem.SurveyQuestionOptionId;
                     subOptionsMetric.optionText = subitem.OptionValue;
-                    subOptionsMetric.optionCount = userSelected.Where(x=>x == subitem.SurveyQuestionOptionId.ToString()).Count();
+                    subOptionsMetric.optionCount = userSelected.Where(x => x == subitem.SurveyQuestionOptionId.ToString()).Count();
                     subOptionsMetric.optionAverage = (Convert.ToDouble(subOptionsMetric.optionCount) / currentOptionSelectedChoicesList.Count()) * 100;
                     count += subOptionsMetric.optionCount;
                     subOptionsMetrics.Add(subOptionsMetric);

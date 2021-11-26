@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
+using freepoll.Common;
 using freepoll.Models;
 using freepoll.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using freepoll.Common;
-using static freepoll.Common.ResponseMessages;
 using Microsoft.Extensions.Caching.Memory;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using static freepoll.Common.ResponseMessages;
 
 namespace freepoll.Controllers
 {

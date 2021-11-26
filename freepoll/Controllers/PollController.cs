@@ -1,20 +1,16 @@
-using freepoll.Models;
-using Microsoft.AspNetCore.Mvc;
-using freepoll.ViewModels;
-using System.Linq;
-using System;
-using freepoll.Helpers;
-using System.Collections.Generic;
 using AutoMapper;
-using freepoll.UserModels;
-using Microsoft.AspNetCore.Http;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Dynamic;
 using freepoll.Common;
-using static freepoll.Common.ResponseMessages;
-using Microsoft.Extensions.Primitives;
-using System.Text.RegularExpressions;
+using freepoll.Helpers;
+using freepoll.Models;
+using freepoll.UserModels;
+using freepoll.ViewModels;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using static freepoll.Common.ResponseMessages;
 
 namespace freepoll.Controllers
 {
@@ -39,7 +35,6 @@ namespace freepoll.Controllers
         public IActionResult AddNewPoll([FromBody] NewPollViewModel newPoll)
         {
             string userId = Request.Headers[Constants.UserToken];
-
             User user;
             _memoryCache.TryGetValue(userId, out user);
             if (user == null) return Unauthorized(Messages.UserNotFoundError);
@@ -73,6 +68,7 @@ namespace freepoll.Controllers
             PollViewModel pCache = _mapper.Map<PollViewModel>(p);
             pCache.PollOptions = lstPollOptions;
 
+            _memoryCache.Set($"dbpoll_id_{p.PollId}", p);
             _memoryCache.Set($"poll_guid_{p.PollGuid}", pCache);
             _memoryCache.Set($"poll_id_{p.PollId}", pCache);
             _memoryCache.Remove($"poll_userpoll_userid_{user.UserGuid}");
@@ -100,6 +96,8 @@ namespace freepoll.Controllers
             pollView = _mapper.Map<PollViewModel>(poll);
             List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == id).ToList();
             pollView.PollOptions = options;
+
+            _memoryCache.Set($"poll_id_{poll.PollId}", pollView);
             return Ok(pollView);
         }
 
@@ -120,6 +118,7 @@ namespace freepoll.Controllers
 
             List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == poll.PollId).ToList();
             pollView.PollOptions = options;
+            _memoryCache.Set($"poll_guid_{guid}", pollView);
             return Ok(pollView);
         }
 
@@ -127,7 +126,11 @@ namespace freepoll.Controllers
         [HttpPost]
         public IActionResult VotePoll([FromBody] PollVoteRequestViewModel newPoll)
         {
-            var poll = _dBContext.Poll.Where(x => x.PollId == newPoll.pollId).FirstOrDefault();
+            Poll poll; ;
+            if (_memoryCache.TryGetValue("dbpoll_id_" + newPoll.pollId, out poll))
+                return Ok(poll);
+            else
+                poll = _dBContext.Poll.Where(x => x.PollId == newPoll.pollId).FirstOrDefault();
 
             if (poll == null) return BadRequest(Messages.PollNotFoundError);
             if (poll.Enddate <= DateTime.Now.Date.AddDays(1).AddSeconds(-1)) return BadRequest(Messages.PollEnded);
@@ -254,7 +257,7 @@ namespace freepoll.Controllers
             userpollres.userPolls = filteredUserPollsList;
             userpollres.totalPolls = listpoll.ToList().Count;
 
-            _memoryCache.Set($"poll_userpoll_userid_{user.UserGuid}_pagenum_{pagenum}_pagesize_{pagesize}", userpollres);
+            _memoryCache.Set($"poll_userpoll_userid_{user.UserGuid}", userpollres);
             return Ok(userpollres);
         }
 

@@ -1,6 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace freepoll.Models
 {
@@ -546,6 +544,6 @@ namespace freepoll.Models
             OnModelCreatingPartial(modelBuilder);
         }
 
-        partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+        private partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
     }
 }

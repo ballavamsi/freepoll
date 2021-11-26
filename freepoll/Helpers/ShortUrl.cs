@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace freepoll.Helpers
 {
@@ -20,7 +18,6 @@ namespace freepoll.Helpers
             string token = urlsafe.Substring(minLength, maxLength);
 
             return token;
-
         }
     }
 }

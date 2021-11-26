@@ -7,13 +7,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 
 namespace freepoll.Helpers
 {
     public static class LocationHelper
     {
-        public static string GetRequestIP(IHttpContextAccessor _httpContextAccessor,bool tryUseXForwardHeader = true)
+        public static string GetRequestIP(IHttpContextAccessor _httpContextAccessor, bool tryUseXForwardHeader = true)
         {
             string ip = null;
 
@@ -25,14 +24,14 @@ namespace freepoll.Helpers
             // http://stackoverflow.com/a/43554000/538763
             //
             if (tryUseXForwardHeader)
-                ip = GetHeaderValueAs<string>(_httpContextAccessor,"X-Forwarded-For").SplitCsv().FirstOrDefault();
+                ip = GetHeaderValueAs<string>(_httpContextAccessor, "X-Forwarded-For").SplitCsv().FirstOrDefault();
 
             // RemoteIpAddress is always null in DNX RC1 Update1 (bug).
             if (ip.IsNullOrWhitespace() && _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress != null)
                 ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
 
             if (ip.IsNullOrWhitespace())
-                ip = GetHeaderValueAs<string>(_httpContextAccessor,"REMOTE_ADDR");
+                ip = GetHeaderValueAs<string>(_httpContextAccessor, "REMOTE_ADDR");
 
             // _httpContextAccessor.HttpContext?.Request?.Host this is the local host.
 
@@ -41,7 +40,7 @@ namespace freepoll.Helpers
 
             return ip;
         }
-        
+
         private static T GetHeaderValueAs<T>(IHttpContextAccessor _httpContextAccessor, string headerName)
         {
             StringValues values;
@@ -55,7 +54,6 @@ namespace freepoll.Helpers
             }
             return default(T);
         }
-
 
         private static List<string> SplitCsv(this string csvList, bool nullOrWhitespaceInputReturnsNull = false)
         {

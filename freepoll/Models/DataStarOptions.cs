@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace freepoll.Models
+﻿namespace freepoll.Models
 {
     public partial class DataStarOptions
     {

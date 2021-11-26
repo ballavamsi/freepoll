@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace freepoll.UserModels
+﻿namespace freepoll.UserModels
 {
     public enum EnumStatus
     {

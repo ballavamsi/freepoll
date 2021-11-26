@@ -40,7 +40,7 @@ namespace freepoll.Controllers
             _memoryCache.TryGetValue(userId, out user);
             if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
-            int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
+            int? PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
 
             Survey s = _mapper.Map<Survey>(newSurvey);
             s.StatusId = PublishedStatusId;
@@ -415,6 +415,11 @@ namespace freepoll.Controllers
             _memoryCache.TryGetValue(userId, out user);
             if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
+            _memoryCache.TryGetValue($"user_surveys_{user.UserGuid}",out usersurveyres);
+            if (usersurveyres != null)
+                return Ok(usersurveyres);
+            usersurveyres = new UserSurveyResponse();
+
             List<Status> statuses = _dBContext.Status.ToList();
 
             var listSurveys = from survey in _dBContext.Survey
@@ -454,6 +459,7 @@ namespace freepoll.Controllers
             usersurveyres.userSurveys = filteredUserSurveysList;
             usersurveyres.totalSurveys = listSurveys.ToList().Count;
 
+            _memoryCache.Set($"user_surveys_{user.UserGuid}", usersurveyres);
             return Ok(usersurveyres);
         }
 
@@ -521,6 +527,11 @@ namespace freepoll.Controllers
             _memoryCache.TryGetValue(userId, out user);
             if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
+            _memoryCache.TryGetValue($"user_survey_feedback_{surveyGuid}_pageno_{pagenum}_pagesize_{pagesize}", out userFeedbackResponse);
+            if (userFeedbackResponse != null)
+                return Ok(userFeedbackResponse);
+            userFeedbackResponse = new UserFeedbackResponse();
+
             Survey survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.SurveyGuid == surveyGuid).FirstOrDefault();
 
             if (survey == null) return BadRequest(Messages.SurveyNotFoundError);
@@ -551,6 +562,7 @@ namespace freepoll.Controllers
             userFeedbackResponse.total = total;
 
             userFeedbackResponse.questions = _dBContext.SurveyQuestions.Where(x => x.StatusId != (int)EnumStatus.Deleted && x.SurveyId == survey.Surveyid).Select(x => x.SurveyQuestionId).ToList();
+            _memoryCache.Set($"user_survey_feedback_{surveyGuid}_pageno_{pagenum}_pagesize_{pagesize}", userFeedbackResponse);
             return Ok(userFeedbackResponse);
         }
 
@@ -630,10 +642,18 @@ namespace freepoll.Controllers
         public IActionResult UserSurveyReports(string surveyGuid)
         {
             SurveyMetrics metric = new SurveyMetrics(_dBContext, _mapper);
+
+            SurveyMetricViewModel surveyMetric = new SurveyMetricViewModel();
+
             string userId = Request.Headers[Constants.UserToken];
             User user;
             _memoryCache.TryGetValue(userId, out user);
             if (user == null) return Unauthorized(Messages.UserNotFoundError);
+
+            _memoryCache.TryGetValue($"user_survey_report_{surveyGuid}", out surveyMetric);
+            if (surveyMetric != null)
+                return Ok(surveyMetric);
+            surveyMetric = new SurveyMetricViewModel();
 
             var survey = _dBContext.Survey.Where(x => x.CreatedBy == user.Userid && x.SurveyGuid == surveyGuid).FirstOrDefault();
             if (survey == null) return BadRequest(Messages.SurveyNotFoundError);
@@ -641,7 +661,6 @@ namespace freepoll.Controllers
             List<SurveyQuestions> surveyQuestions = _dBContext.SurveyQuestions.Where(x => x.StatusId != (int)EnumStatus.Deleted && x.SurveyId == survey.Surveyid).ToList();
             List<QuestionType> questionType = _dBContext.QuestionType.ToList();
 
-            SurveyMetricViewModel surveyMetric = new SurveyMetricViewModel();
             List<QuestionMetricViewModel> questionMetrics = new List<QuestionMetricViewModel>();
             foreach (var item in surveyQuestions)
             {
@@ -698,6 +717,7 @@ namespace freepoll.Controllers
             surveyMetric.Description = survey.Welcomedescription;
             surveyMetric.logo = survey.Welcomeimage;
             surveyMetric.Questions = questionMetrics;
+            _memoryCache.Set($"user_survey_report_{surveyGuid}", surveyMetric);
             return Ok(surveyMetric);
         }
 

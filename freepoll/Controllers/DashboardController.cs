@@ -5,6 +5,7 @@ using freepoll.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static freepoll.Common.ResponseMessages;
@@ -51,7 +52,7 @@ namespace freepoll.Controllers
 
             List<int> pollIds = polls.Select(x => x.PollId).ToList();
             List<PollVotes> pollVotes = (from eachPoll in _dBContext.PollVotes
-                                         where pollIds.Contains(eachPoll.PollId)
+                                         where pollIds.Contains(Convert.ToInt32(eachPoll.PollId))
                                          select eachPoll).ToList();
             var pollVotesReceived = (from eachPoll in pollVotes
                                      group new { eachPoll.PollId } by new { eachPoll.CreatedDate, eachPoll.PollId } into eachGroup
@@ -67,7 +68,7 @@ namespace freepoll.Controllers
 
             List<int> surveyIds = surveys.Select(x => x.Surveyid).ToList();
             List<SurveyFeedback> surveyUsers = (from eachSurvey in _dBContext.SurveyFeedback
-                                                where surveyIds.Contains(eachSurvey.SurveyId) && eachSurvey.CompletedDatetime != null
+                                                where surveyIds.Contains(Convert.ToInt32(eachSurvey.SurveyId)) && eachSurvey.CompletedDatetime != null
                                                 select eachSurvey).ToList();
 
             //Update total Surveys Feedbacks

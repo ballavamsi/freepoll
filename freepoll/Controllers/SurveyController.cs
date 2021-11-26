@@ -40,7 +40,7 @@ namespace freepoll.Controllers
             _memoryCache.TryGetValue(userId, out user);
             if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
-            int PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
+            int? PublishedStatusId = _dBContext.Status.Where(x => x.Statusname == "Published").Select(x => x.Statusid).FirstOrDefault();
 
             Survey s = _mapper.Map<Survey>(newSurvey);
             s.StatusId = PublishedStatusId;
@@ -148,9 +148,9 @@ namespace freepoll.Controllers
             {
                 surv.Welcometitle = sur.Welcometitle;
                 surv.WelcomeDescription = sur.Welcomedescription;
-                surv.Emailidrequired = sur.Emailidrequired;
-                surv.Askemail = sur.Askemail;
-                surv.Enableprevious = sur.Enableprevious;
+                surv.Emailidrequired = Convert.ToInt32(sur.Emailidrequired);
+                surv.Askemail = Convert.ToInt32(sur.Askemail);
+                surv.Enableprevious = Convert.ToInt32(sur.Enableprevious);
                 surv.Endtitle = sur.Endtitle;
                 surv.SurveyId = sur.Surveyid;
                 surv.Welcomeimage = sur.Welcomeimage;
@@ -164,9 +164,9 @@ namespace freepoll.Controllers
                 {
                     SurveyQuestionsViewModel viewquestion = new SurveyQuestionsViewModel();
                     viewquestion.SurveyQuestionId = item.SurveyQuestionId;
-                    viewquestion.QuestionDisplayOrder = item.QuestionDisplayOrder;
-                    viewquestion.Isrequired = item.Isrequired;
-                    viewquestion.TypeId = item.TypeId;
+                    viewquestion.QuestionDisplayOrder = Convert.ToInt32(item.QuestionDisplayOrder);
+                    viewquestion.Isrequired = Convert.ToInt32(item.Isrequired);
+                    viewquestion.TypeId = Convert.ToInt32(item.TypeId);
                     viewquestion.Title = item.Title;
                     viewquestion.Subtitle = item.Subtitle;
                     List<SurveyQuestionOptions> options = new List<SurveyQuestionOptions>();
@@ -424,7 +424,7 @@ namespace freepoll.Controllers
                               {
                                   surveyId = survey.Surveyid,
                                   surveyGuid = survey.SurveyGuid,
-                                  date = survey.CreatedDate,
+                                  date = Convert.ToDateTime(survey.CreatedDate),
                                   surveyName = survey.Welcometitle,
                                   status = survey.StatusId.ToString(),
                                   feedbacks = 0
@@ -437,7 +437,7 @@ namespace freepoll.Controllers
             List<int> pollIdsFilteredList = filteredUserSurveysList.Select(x => x.surveyId).ToList();
 
             List<SurveyFeedback> surveyFeedback = (from eachSurvey in _dBContext.SurveyFeedback
-                                                   where pollIdsFilteredList.Contains(eachSurvey.SurveyId)
+                                                   where pollIdsFilteredList.Contains(Convert.ToInt32(eachSurvey.SurveyId))
                                                    select eachSurvey).ToList();
 
             var surveyFeedbacksReceived = (from eachSurvey in surveyFeedback

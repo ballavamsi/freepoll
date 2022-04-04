@@ -102,6 +102,7 @@ namespace freepoll.Controllers
             if (_memoryCache.TryGetValue($"survey_id_{id}", out surview))
                 return Ok(surview);
 
+            surview = new SurveyViewModel();
             Survey sur = _dBContext.Survey.Where(x => x.Surveyid == id).FirstOrDefault();
 
             if (sur == null)
@@ -140,6 +141,8 @@ namespace freepoll.Controllers
             SurveyViewModel surv = new SurveyViewModel();
             if (_memoryCache.TryGetValue($"survey_guid_{guid}", out surv))
                 return Ok(surv);
+
+            surv = new SurveyViewModel();
             Survey sur = _dBContext.Survey.Where(x => x.SurveyGuid == guid).FirstOrDefault();
             if (sur == null)
                 return BadRequest(Messages.SurveyNotFoundError);
@@ -415,7 +418,7 @@ namespace freepoll.Controllers
             _memoryCache.TryGetValue(userId, out user);
             if (user == null) return Unauthorized(Messages.UserNotFoundError);
 
-            _memoryCache.TryGetValue($"user_surveys_{user.UserGuid}",out usersurveyres);
+            _memoryCache.TryGetValue($"user_surveys_{user.UserGuid}", out usersurveyres);
             if (usersurveyres != null)
                 return Ok(usersurveyres);
             usersurveyres = new UserSurveyResponse();

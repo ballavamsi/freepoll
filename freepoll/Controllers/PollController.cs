@@ -68,9 +68,9 @@ namespace freepoll.Controllers
             PollViewModel pCache = _mapper.Map<PollViewModel>(p);
             pCache.PollOptions = lstPollOptions;
 
-            _memoryCache.Set($"dbpoll_id_{p.PollId}", p);
-            _memoryCache.Set($"poll_guid_{p.PollGuid}", pCache);
-            _memoryCache.Set($"poll_id_{p.PollId}", pCache);
+            _memoryCache.Set($"dbpoll_id_{p.PollId}", p, Resources.CachedTime);
+            _memoryCache.Set($"poll_guid_{p.PollGuid}", pCache, Resources.CachedTime);
+            _memoryCache.Set($"poll_id_{p.PollId}", pCache, Resources.CachedTime);
             _memoryCache.Remove($"poll_userpoll_userid_{user.UserGuid}");
 
             DashboardMetricsViewModel dashboardMetricsViewModel;
@@ -78,7 +78,7 @@ namespace freepoll.Controllers
             if (dashboardMetricsViewModel != null)
             {
                 dashboardMetricsViewModel.polls += 1;
-                _memoryCache.Set($"dashboard_{user.UserGuid}", dashboardMetricsViewModel);
+                _memoryCache.Set($"dashboard_{user.UserGuid}", dashboardMetricsViewModel, Resources.CachedTime);
             }
 
             return GetPoll(p.PollId);
@@ -97,7 +97,7 @@ namespace freepoll.Controllers
             List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == id).ToList();
             pollView.PollOptions = options;
 
-            _memoryCache.Set($"poll_id_{poll.PollId}", pollView);
+            _memoryCache.Set($"poll_id_{poll.PollId}", pollView, Resources.CachedTime);
             return Ok(pollView);
         }
 
@@ -118,7 +118,7 @@ namespace freepoll.Controllers
 
             List<PollOptions> options = _dBContext.PollOptions.Where(x => x.PollId == poll.PollId).ToList();
             pollView.PollOptions = options;
-            _memoryCache.Set($"poll_guid_{guid}", pollView);
+            _memoryCache.Set($"poll_guid_{guid}", pollView, Resources.CachedTime);
             return Ok(pollView);
         }
 
@@ -195,7 +195,7 @@ namespace freepoll.Controllers
                 Regions = lstRegion
             };
 
-            _memoryCache.Set("poll_guid_results" + pollGuid.ToString(), dynamicData);
+            _memoryCache.Set("poll_guid_results" + pollGuid.ToString(), dynamicData, Resources.CachedTime);
             return Ok(dynamicData);
         }
 
@@ -257,7 +257,7 @@ namespace freepoll.Controllers
             userpollres.userPolls = filteredUserPollsList;
             userpollres.totalPolls = listpoll.ToList().Count;
 
-            _memoryCache.Set($"poll_userpoll_userid_{user.UserGuid}", userpollres);
+            _memoryCache.Set($"poll_userpoll_userid_{user.UserGuid}", userpollres, Resources.CachedTime);
             return Ok(userpollres);
         }
 
@@ -301,7 +301,7 @@ namespace freepoll.Controllers
             if (dashboardMetricsViewModel != null)
             {
                 dashboardMetricsViewModel.polls = (dashboardMetricsViewModel.polls - 1) > 0 ? (dashboardMetricsViewModel.polls - 1) : 0;
-                _memoryCache.Set($"dashboard_{user.UserGuid}", dashboardMetricsViewModel);
+                _memoryCache.Set($"dashboard_{user.UserGuid}", dashboardMetricsViewModel, Resources.CachedTime);
             }
             return Ok(response);
         }

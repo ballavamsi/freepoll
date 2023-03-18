@@ -130,7 +130,7 @@ namespace freepoll.Controllers
             }
             surview.SurveyQuestions = viewquestions;
 
-            _memoryCache.Set($"survey_id_{id}", surview);
+            _memoryCache.Set($"survey_id_{id}", surview, Resources.CachedTime);
             return Ok(surview);
         }
 
@@ -185,7 +185,7 @@ namespace freepoll.Controllers
                 }
                 surv.SurveyQuestions = viewquestions;
             }
-            _memoryCache.Set($"survey_guid_{surv.SurveyGuid}", surv);
+            _memoryCache.Set($"survey_guid_{surv.SurveyGuid}", surv, Resources.CachedTime);
             return Ok(surv);
         }
 
@@ -462,7 +462,7 @@ namespace freepoll.Controllers
             usersurveyres.userSurveys = filteredUserSurveysList;
             usersurveyres.totalSurveys = listSurveys.ToList().Count;
 
-            _memoryCache.Set($"user_surveys_{user.UserGuid}", usersurveyres);
+            _memoryCache.Set($"user_surveys_{user.UserGuid}", usersurveyres, Resources.CachedTime);
             return Ok(usersurveyres);
         }
 
@@ -565,7 +565,7 @@ namespace freepoll.Controllers
             userFeedbackResponse.total = total;
 
             userFeedbackResponse.questions = _dBContext.SurveyQuestions.Where(x => x.StatusId != (int)EnumStatus.Deleted && x.SurveyId == survey.Surveyid).Select(x => x.SurveyQuestionId).ToList();
-            _memoryCache.Set($"user_survey_feedback_{surveyGuid}_pageno_{pagenum}_pagesize_{pagesize}", userFeedbackResponse);
+            _memoryCache.Set($"user_survey_feedback_{surveyGuid}_pageno_{pagenum}_pagesize_{pagesize}", userFeedbackResponse, Resources.CachedTime);
             return Ok(userFeedbackResponse);
         }
 
@@ -720,7 +720,7 @@ namespace freepoll.Controllers
             surveyMetric.Description = survey.Welcomedescription;
             surveyMetric.logo = survey.Welcomeimage;
             surveyMetric.Questions = questionMetrics;
-            _memoryCache.Set($"user_survey_report_{surveyGuid}", surveyMetric);
+            _memoryCache.Set($"user_survey_report_{surveyGuid}", surveyMetric, Resources.CachedTime);
             return Ok(surveyMetric);
         }
 
@@ -791,7 +791,7 @@ namespace freepoll.Controllers
             surveyUserFeedbackViewModel = _mapper.Map<SurveyUserFeedbackViewModel>(surview);
             surveyUserFeedbackViewModel.SurveyFeedbacks = new List<SurveyFeedback>() { surveyFeedback };
 
-            _memoryCache.Set($"survey_feedback_{surveyUserGuid}", surveyUserFeedbackViewModel);
+            _memoryCache.Set($"survey_feedback_{surveyUserGuid}", surveyUserFeedbackViewModel, Resources.CachedTime);
             return Ok(surveyUserFeedbackViewModel);
         }
     }

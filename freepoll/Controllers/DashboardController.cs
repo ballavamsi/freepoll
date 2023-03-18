@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using freepoll.Common;
+using freepoll.Helpers;
 using freepoll.Models;
 using freepoll.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static freepoll.Common.ResponseMessages;
@@ -72,7 +74,7 @@ namespace freepoll.Controllers
 
             //Update total Surveys Feedbacks
             dashboardMetricsViewModel.surveyFeedbacks = surveyUsers.Count;
-            _memoryCache.Set($"dashboard_{user.UserGuid}", dashboardMetricsViewModel);
+            _memoryCache.Set($"dashboard_{user.UserGuid}", dashboardMetricsViewModel, Resources.CachedTime);
             return Ok(dashboardMetricsViewModel);
         }
     }
